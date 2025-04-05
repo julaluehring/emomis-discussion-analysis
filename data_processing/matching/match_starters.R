@@ -24,7 +24,7 @@ matching_df <- read_csv(FILE_PATH,
                 col_types = cols(
                   id = col_character(),
                   Rating = col_double(),
-                  Orientation = col_double(),
+                  Bias = col_double(),
                   anger_log = col_double(),
                   fear_log = col_double(),
                   disgust_log = col_double(),
@@ -47,7 +47,7 @@ matching_df <- read_csv(FILE_PATH,
 # matching_df <- matching_df[sample(nrow(matching_df), 100000), ]
 
 formula <- as.formula("Rating ~ 
-                      Orientation +
+                      Bias +
                       author.followers_count_log +
                       author.following_count_log +
                       author.tweet_count_log +
@@ -182,7 +182,7 @@ print(heatmap)
 dev.off()
 
 ## Correlation between Covariates
-cov <- matching_df[c("Orientation",
+cov <- matching_df[c("Bias",
                       "anger_log", "fear_log", 
                       "disgust_log", "sadness_log",
                       "joy_log", "pride_log", "hope_log",
@@ -294,7 +294,7 @@ m.out_nearest_mahalanobis <- matchit(
 
 #save matched data
 m.data_nearest_mahalanobis <- match.data(m.out_nearest_mahalanobis)
-MATCHED_PATH <- file.path(DIR_PATH, "matched_starters_mahalanobis_log.csv")
+MATCHED_PATH <- file.path(DIR_PATH, "matched_starters_mahalanobis.csv")
 write.csv(m.data_nearest_mahalanobis, file = MATCHED_PATH)
 
 #save summary values after matching
@@ -333,7 +333,7 @@ m.out_nearest_glm <- matchit(
 m.data_nearest_glm <- match.data(m.out_nearest_glm)
 
 #save csv
-MATCHED_PATH <- file.path(DIR_PATH, "matched_starters_glm_log.csv")
+MATCHED_PATH <- file.path(DIR_PATH, "matched_starters_glm.csv")
 write.csv(m.data_nearest_glm, file = MATCHED_PATH)
 
 #save summary values after matching
