@@ -5,9 +5,9 @@ Public repository for the data collection and analysis code for [LINK TO PAPER].
 Here you find the scripts to reproduce the statistical analysis. Due to the size of the dataset, the data subsets are [this](https://osf.io/ach37/?view_only=72f3f04de55947c48bad52d84583e4f5) repository (currently view-only). After downloading this repository, place the data folder contained in the aforementioned OSF repository and copy it into the main directory of this repository (i.e. on the same level as the code folders).
 
 ## Reproduction of analysis
-The repository is organized into two sections: ``data`` and ``analysis``. 
+The repository is organized into two sections: ``data_processing`` and ``analysis``. 
 
-* ``data`` contains exemplary scripts for the data collection, wrangling, text processing and non-parametric matching. The resulting datasets are used for the statistical analysis. _Note._ Most of these steps cannot be reproduced (see Restrictions).
+* ``data_processing`` contains exemplary scripts for the data collection, wrangling, text processing and non-parametric matching. The resulting datasets are used for the statistical analysis. _Note._ Most of these steps cannot be reproduced (see Restrictions).
 * In ``analysis``, you will find the scripts to reproduce the results of the statistical analysis. The datasets used for each analysis can be found [here](https://osf.io/ach37/?view_only=72f3f04de55947c48bad52d84583e4f5).
 
 ### Restrictions
@@ -31,19 +31,20 @@ Here, we save all files for the emotion classification. First, we cleaned the te
 For the validation, we calculate the percentage agreement in ``shuffle_percentage_agreement.py``, compute F1s in ``bootstrap_f1.R``and plot the area under the curve in ``plot_ruc.ipynb``. 
 
 ## Non-parametric matching
-For the non-parametric matching and subsequent analysis of discussions, we first subset only the discussions, i.e., the tweets that have received replies from our dataset (``subset_discussions.ipynb``). Then, we aggregate emotions and a list of covariates per discussion (``aggregate_starters.ipynb``) and news tweets (``aggregate_starters.ipynb``) separately. Now, we have the separate input datasets and scripts for matching: 
+If you want to reproduce the matching, use the dataset "german_tweets_anonymized.csv.gz" and repeat the following steps:
+First, subset only the discussions, i.e., the tweets that have received replies from our dataset (``subset_discussions.ipynb``). Then, aggregate emotions and a list of covariates per discussion (``aggregate_starters.ipynb``) and news tweets (``aggregate_starters.ipynb``) separately. Now, we have the separate input datasets and scripts for the matching: 
 
 * ``match_starters.R``:
       * input: "discussions_starters_aggregates.csv"
-      * output: "matched_starters.csv"
-* ``match_replies.R``:
+      * output: "matched_starters_mahalanobis.csv"
+* ``match_discussions.R``:
       * input: "discussions_replies_aggregates.csv"
-      * ouput: "matched_replies.csv"
+      * ouput: "matched_discussions_mahalanobis.csv"
 * ``match_first:replies.R``:
       * input: "first_replies_aggregates.csv"
-      * output: "matched_replies_first.csv"
+      * output: "matched_replies_first_mahalanobis.csv"
 
-To evaluate the matching and plot: ``eval_matching.ipynb``
+To evaluate the matching and plot: ``eval_matching.ipynb``.
 
 ## Statistical analysis
 The statistical analyses can be reproduced using the following dataset files: 
