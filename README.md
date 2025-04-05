@@ -13,7 +13,7 @@ The repository is organized into two sections: ``data`` and ``analysis``.
 ### Restrictions
 There are two major restrictions to publishing all data and scripts required to fully reproduce the study: 
 
-1. Data collection: Due to data protection reasons, Twitter's usage agreement for the use of its API, and the closed access of the Twitter academic API v2, we cannot publish the text of the tweets. We publish the datasets with the tweet IDs and the variables that were used in the statistical analysis, such as the emotion scores. 
+1. Data collection: Due to data protection reasons, Twitter's usage agreement for the use of its API, and the closed access of the Twitter academic API v2, we cannot publish the text of the tweets. We removed the tweet text, randomized author IDs and publish the datasets with the tweet or conversation IDs and the variables that were used in the statistical analysis, such as the emotion scores. 
 
 2. NewsGuard scores: The NewsGuard database is proprietary, which is why we cannot publish NewsGuard domain labels or domain names. Since we collected our data based on the list of domains, the data collection cannot be reproduced without acquiring the NewsGuard database either.
 
