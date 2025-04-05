@@ -2,13 +2,13 @@
 
 Public repository for the data collection and analysis code for [LINK TO PAPER]. 
 
-Here you find the scripts to reproduce the statistical analysis. Due to the size of the dataset, the data subsets are [this](https://osf.io/ach37/?view_only=72f3f04de55947c48bad52d84583e4f5) repository (currently view-only). After downloading this repository, place the data folder contained in the aforementioned OSF repository and copy it into the main directory of this repository (i.e. on the same level as the code folders).
+Here you find the scripts to reproduce the statistical analysis. Due to the size of the dataset, the data subsets are [this](https://osf.io/ach37/?view_only=6cb92560a84f41a8954d5db2863e83e0) repository (currently anonymous view-only link). After downloading this repository, place the data folder contained in the aforementioned OSF repository and copy it into the main directory of this repository (i.e. on the same level as the code folders).
 
 ## Reproduction of analysis
 The repository is organized into two sections: ``data_processing`` and ``analysis``. 
 
 * ``data_processing`` contains exemplary scripts for the data collection, wrangling, text processing and non-parametric matching. The resulting datasets are used for the statistical analysis. _Note._ Most of these steps cannot be reproduced (see Restrictions).
-* In ``analysis``, you will find the scripts to reproduce the results of the statistical analysis. The datasets used for each analysis can be found [here](https://osf.io/ach37/?view_only=72f3f04de55947c48bad52d84583e4f5).
+* In ``analysis``, you will find the scripts to reproduce the results of the statistical analysis. The datasets used for each analysis can be found [here](https://osf.io/ach37/?view_only=6cb92560a84f41a8954d5db2863e83e0).
 
 ### Restrictions
 There are two major restrictions to publishing all data and scripts required to fully reproduce the study: 
