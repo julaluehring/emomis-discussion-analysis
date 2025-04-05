@@ -1,5 +1,7 @@
 # Untracked folders and files
 data/
+data.zip
+anonymize_data.ipynb
 
 # Mac files
 *.DS_Store
