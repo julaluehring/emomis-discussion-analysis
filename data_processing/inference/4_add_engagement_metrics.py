@@ -3,14 +3,14 @@ from os.path import join
 import pickle
 import sys
 
-DATA_DIR = sys.argv[1]
+src = sys.argv[1]
 
 #specify data types
-with open(join(DATA_DIR, "dtypes_config.pickle"), "rb") as file:
+with open(join(src, "dtypes_config.pickle"), "rb") as file:
     DTYPES = pickle.load(file)
 
 #read in csv
-df = pd.read_csv(join(DATA_DIR, 
+df = pd.read_csv(join(src, 
                       "german_newsguard_tweets_inference.csv.gz"),
                     compression="gzip",
                     dtype=DTYPES,
@@ -36,7 +36,7 @@ df["status"] = "incomplete"
 df.loc[(df["type"] == "starter") & (df["reply_count"] == 0), 
        "status"] = "complete"
 
-conversations = set(pd.read_csv(join(DATA_DIR, 
+conversations = set(pd.read_csv(join(src, 
                                  "full_conversation_ids.csv"),
                             dtype=DTYPES)\
                     ["conversation_id"])
@@ -46,7 +46,7 @@ df.loc[df["conversation_id"].isin(conversations),
        "status"] = "complete"
 
 #save data
-df.to_csv(join(DATA_DIR, 
+df.to_csv(join(src, 
                "german_newsguard_tweets_inference.csv.gz"),
             compression="gzip", 
             index=False)

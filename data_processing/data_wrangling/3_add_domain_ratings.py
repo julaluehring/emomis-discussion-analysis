@@ -5,8 +5,8 @@ import os
 import sys
 import pickle as pkl
 
-DIR = sys.argv[1]
-with open(os.path.join(DIR, "dtypes_config.pickle"), "rb") as file:
+src = sys.argv[1]
+with open(os.path.join(src, "dtypes_config.pickle"), "rb") as file:
     DTYPES = pkl.load(file)
 
 def add_ratings(dir, dtypes, parse_dates):
@@ -40,7 +40,7 @@ def add_ratings(dir, dtypes, parse_dates):
 parse_dates = ["created_at", "author.created_at"]
 
 add_ratings(
-    dir=DIR,
+    dir=src,
     dtypes=DTYPES,
     parse_dates=parse_dates
 )

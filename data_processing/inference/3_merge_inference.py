@@ -3,13 +3,13 @@ from os.path import join
 import pickle
 import sys
 
-DATA_DIR = sys.argv[1]
+src = sys.argv[1]
 
-with open(join(DATA_DIR, "dtypes_config.pickle"), 
+with open(join(src, "dtypes_config.pickle"), 
           'rb') as file:
     DTYPES = pickle.load(file)
 
-df = pd.read_csv(join(DATA_DIR, 
+df = pd.read_csv(join(src, 
                       "german_newsguard_tweets.csv.gz"), 
                     #usecols=["id", "domain"], #check len
                     dtype = DTYPES,
@@ -20,7 +20,7 @@ df = pd.read_csv(join(DATA_DIR,
 
 print(f'Length of df: {len(df)}')
 
-emos = pd.read_csv(join(DATA_DIR, 
+emos = pd.read_csv(join(src, 
                         "inference/emotion_inference.csv.gz"), 
                     compression="gzip",
                     usecols = ["id", "domain", #identifier
@@ -39,7 +39,7 @@ df_emos = pd.merge(df, emos,
 print(f'Length of merged df_emos: {len(df_emos)}')
 del df, emos
 
-df_groups = pd.read_csv(join(DATA_DIR, "inference/group_inference_condensed.csv.gz"), 
+df_groups = pd.read_csv(join(src, "inference/group_inference_condensed.csv.gz"), 
                     compression="gzip",
                     sep=";",
                     usecols = ["id", "domain", #identifier
@@ -57,5 +57,5 @@ del df_groups, df_emos
 
 print(f'Length of merged df_inf: {len(df_inf)}')
 
-df_inf.to_csv(join(DATA_DIR, "german_newsguard_tweets_inference.csv.gz"),
+df_inf.to_csv(join(src, "german_newsguard_tweets_inference.csv.gz"),
                 compression="gzip", index=True)

@@ -10,13 +10,13 @@ library(stargazer)
 library(ggplot2)
 library(reshape2)
 
-# Run in CMD: Rscript match_all_replies.R /raid5pool/tank/luehring/german_newsguard_tweets/discussions/
+# Run in CMD: Rscript match_all_replies.R <input_directory> <output_directory>
 args <- commandArgs(trailingOnly = TRUE)
-DIR_PATH <- args[1]
-FILE_PATH <- file.path(DIR_PATH, "discussions_replies_aggregates.csv")
-OUTPUT_PATH <- "./replies/all_replies/not_log/"
+dir <- args[1]
+dst <- args[2]
+file <- file.path(dir, "discussions_replies_aggregates.csv")
 
-matching_df <- read_csv(FILE_PATH,
+matching_df <- read_csv(file,
                 col_types = cols(
                   conversation_id = col_character(),
                   Rating = col_double(),
@@ -78,7 +78,7 @@ summary_stats_wd <- data.frame(
                               SD = std_devs)
 
 write.csv(summary_stats_wd,
-          file = file.path(OUTPUT_PATH, "summary_stats_all_dviv.csv"))
+          file = file.path(dst, "summary_stats_all_dviv.csv"))
 
 #define correlation function
 correlation_matrix <- function(df, 
@@ -151,7 +151,7 @@ save_correlation_matrix = function(df, filename, ...) {
 }
 
 save_correlation_matrix(df = dviv,
-                        filename = file.path(OUTPUT_PATH, "correlation_matrix_all_dviv.csv"),
+                        filename = file.path(dst, "correlation_matrix_all_dviv.csv"),
                         digits = 2,
                         use = "lower")
                         
@@ -174,12 +174,12 @@ heatmap <- ggplot(correlation_data_dviv, aes(Var1, Var2, fill = value)) +
   )
 
 pdf(file = file.path(
-              OUTPUT_PATH, "heatmap_all_dviv.pdf"), 
+              dst, "heatmap_all_dviv.pdf"), 
     width = 8, height = 6)
 print(heatmap)
 dev.off()
 
-svg(file.path(OUTPUT_PATH, "heatmap_all_dviv.svg"), 
+svg(file.path(dst, "heatmap_all_dviv.svg"), 
     width = 8, height = 6)
 print(heatmap)
 dev.off()
@@ -211,26 +211,26 @@ summary_stats_cov <- data.frame(
 
 #save as csv
 write.csv(summary_stats_cov, 
-          file = file.path(OUTPUT_PATH, 
+          file = file.path(dst, 
                             "summary_stats_all_cov.csv")
           )
 
 #save as latex table
 stargazer(summary_stats_cov, type = "latex", 
-          out = file.path(OUTPUT_PATH,
+          out = file.path(dst,
                             "summary_stats_all_cov.tex")
       )
 
 #create correlation matrix
 save_correlation_matrix(df = cov,
-                        filename = file.path(OUTPUT_PATH,
+                        filename = file.path(dst,
                                               "correlation_matrix_all_cov.csv"),
                         digits = 2,
                         use = "lower")
 
 #save as latex table
 stargazer(cov, type = "latex", 
-          out = file.path(OUTPUT_PATH, "correlation_matrix_all_cov.tex")
+          out = file.path(dst, "correlation_matrix_all_cov.tex")
           )
 
 corr_matrix_cov <- cor(cov)
@@ -250,12 +250,12 @@ heatmap <- ggplot(correlation_data_cov, aes(Var1, Var2, fill = value)) +
     axis.title = element_blank()
   )
 
-svg(file.path(OUTPUT_PATH, "heatmap_all_cov.svg"), 
+svg(file.path(dst, "heatmap_all_cov.svg"), 
                 width = 8, height = 6)
 print(heatmap)
 dev.off()
 
-pdf(file = file.path(OUTPUT_PATH, "heatmap_all_cov.pdf"),
+pdf(file = file.path(dst, "heatmap_all_cov.pdf"),
                       width = 8, height = 6)
 print(heatmap)
 dev.off()
@@ -276,12 +276,12 @@ print(summary_table$Problematic)
 summary_final <- as.data.frame(summary_table$sum.all)
 summary_final <- round(summary_final, digits = 4)
 write.csv(summary_final, 
-          file = file.path(OUTPUT_PATH, "summary_pre_match_all.csv")
+          file = file.path(dst, "summary_pre_match_all.csv")
           )
 
 #save as latex table
 stargazer(summary_final, type = "latex", 
-          out = file.path(OUTPUT_PATH,"summary_pre_match_all.tex")
+          out = file.path(dst,"summary_pre_match_all.tex")
           )
 
 ## Nearest neighbor matching
@@ -305,16 +305,16 @@ print(summary_table$Problematic)
 summary_final <- as.data.frame(summary_table$sum.matched)
 summary_final <- round(summary_final, digits = 4)
 write.csv(summary_final, 
-          file = file.path(OUTPUT_PATH,"summary_nearest_mahalanobis_all.csv")
+          file = file.path(dst,"summary_nearest_mahalanobis_all.csv")
           )
 
 #save plot
-pdf(file = file.path(OUTPUT_PATH, "mahalanobis_plot_all.pdf"),
+pdf(file = file.path(dst, "mahalanobis_plot_all.pdf"),
       width = 8, height = 6)
 plot(summary_table)
 dev.off()
 
-svg(file.path(OUTPUT_PATH, "mahalanobis_plot_all.svg"), 
+svg(file.path(dst, "mahalanobis_plot_all.svg"), 
     width = 8, height = 6)
 plot(summary_table)
 dev.off()
@@ -339,16 +339,16 @@ print(summary_table$Problematic)
 summary_final <- as.data.frame(summary_table$sum.matched)
 summary_final <- round(summary_final, digits = 4)
 write.csv(summary_final, 
-            file = file.path(OUTPUT_PATH,"summary_nearest_glm_all.csv")
+            file = file.path(dst,"summary_nearest_glm_all.csv")
             )
 
 #save plot
-pdf(file = file.path(OUTPUT_PATH, "glm_plot_all.pdf"),
+pdf(file = file.path(dst, "glm_plot_all.pdf"),
       width = 8, height = 6)
 glm_plot <- plot(summary_table)
 dev.off()
 
-svg(file.path(OUTPUT_PATH, "glm_plot_all.svg"), 
+svg(file.path(dst, "glm_plot_all.svg"), 
     width = 8, height = 6)
 plot(summary_table)
 dev.off()

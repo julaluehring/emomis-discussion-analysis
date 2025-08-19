@@ -1,30 +1,28 @@
-# STEP 4: MATCH THE TWEETS MENTIONING A DOMAIN.
-
 library("MatchIt")
 library(readr)
 library(arrow)
 library(corrplot)
 library(dplyr)
-library("marginaleffects")
 library("Hmisc")
 library(knitr)
 library("jtools")
 library(stargazer)
 library(ggplot2)
 library(reshape2)
-set.seed(1210)
 
-# Run in CMD: Rscript match_starters.R /raid5pool/tank/luehring/german_newsguard_tweets/discussions/
+# Run in CMD: Rscript match_replies_first.R <dir> <dst>
 args <- commandArgs(trailingOnly = TRUE)
-DIR_PATH <- args[1]
-FILE_PATH <- file.path(DIR_PATH, "discussions_starters_aggregates.csv")
-OUTPUT_PATH <- "./starters"
+dir <- args[1]
+dst <- args[2]
+file <- file.path(dir, "first_replies_aggregates.csv")
 
-matching_df <- read_csv(FILE_PATH,
+matching_df <- read_csv(file,
                 col_types = cols(
+                  conversation_id = col_character(),
                   id = col_character(),
                   Rating = col_double(),
                   Bias = col_double(),
+
                   anger_log = col_double(),
                   fear_log = col_double(),
                   disgust_log = col_double(),
@@ -32,49 +30,64 @@ matching_df <- read_csv(FILE_PATH,
                   joy_log = col_double(),
                   pride_log = col_double(),
                   hope_log = col_double(),
+
+                  anger_first = col_double(),
+                  fear_first = col_double(),
+                  disgust_first = col_double(),
+                  sadness_first = col_double(),
+                  joy_first = col_double(),
+                  pride_first = col_double(),
+                  hope_first = col_double(),
+                  
                   word_count_log = col_double(),
                   author.followers_count_log = col_double(),
                   author.following_count_log = col_double(),
                   author.tweet_count_log = col_double(),
-                  reply_count = col_double(),
-                  retweet_count = col_double(),
-                  quote_count = col_double(),
-                  like_count = col_double()
+                  author.tweet_count_first_log = col_double()
                 )
 )
 
-# test script with random subset of the data
-# matching_df <- matching_df[sample(nrow(matching_df), 100000), ]
-
 formula <- as.formula("Rating ~ 
-                      Bias +
-                      author.followers_count_log +
-                      author.following_count_log +
-                      author.tweet_count_log +
-                      word_count_log +
-                      anger_log + 
-                      fear_log + 
-                      disgust_log +
-                      sadness_log +
-                      joy_log +
-                      pride_log +
-                      hope_log")
+                        Bias +
+                        anger_log + 
+                        fear_log + 
+                        disgust_log + 
+                        sadness_log +
+                        joy_log + 
+                        pride_log + 
+                        hope_log +
+                        word_count_log +
+                        author.followers_count_log +
+                        author.following_count_log +
+                        author.tweet_count_log +
+                        author.tweet_count_first_log")
+
+#replace infite values with NA 
+matching_df <- data.frame(lapply(matching_df, 
+                              function(x) ifelse(is.infinite(x), NA, x))) 
+
+#replace NAs with 0
+matching_df <- matching_df %>%
+  mutate(across(everything(), 
+          ~ifelse(is.na(.), 0, .)))
+
 
 # Correlation Analysis
 ## Correlations between dependent and independent variables
 dviv <- matching_df[c("Rating", 
-                      "reply_count", "retweet_count",
-                      "quote_count", "like_count"
+                      "anger_first", "fear_first", "disgust_first", "sadness_first", 
+                      "joy_first", "pride_first", "hope_first"
                       )]
 
 means <- round(colMeans(dviv), 2)
 std_devs <- round(apply(dviv, 2, sd), 2)
-summary_stats <- data.frame(Variable = names(dviv), 
+summary_stats <- data.frame(
+                              Variable = names(dviv), 
                               Mean = means, 
                               SD = std_devs)
 
 write.csv(summary_stats,
-          file = file.path(OUTPUT_PATH, "summary_stats_starters_dviv.csv"))
+          file = file.path(dst, "summary_stats_first_dviv.csv"))
 
 #define correlation function
 correlation_matrix <- function(df, 
@@ -147,7 +160,7 @@ save_correlation_matrix = function(df, filename, ...) {
 }
 
 save_correlation_matrix(df = dviv,
-                        filename = file.path(OUTPUT_PATH, "correlation_matrix_starters_dviv.csv"),
+                        filename = file.path(dst, "correlation_matrix_first_dviv.csv"),
                         digits = 2,
                         use = "lower")
                         
@@ -165,32 +178,29 @@ heatmap <- ggplot(correlation_data_dviv, aes(Var1, Var2, fill = value)) +
   theme(
     axis.text.x = element_text(size = 14, angle = 45, hjust = 1),  
     axis.text.y = element_text(size = 14),
-    axis.title.x = element_blank(),                              
-    axis.title.y = element_blank()        
+    axis.title = element_blank()
   )
 
-#save the plot with adjusted size (width and height)
-pdf(file = file.path(OUTPUT_PATH, "heatmap_starters_dviv.pdf"), 
-                      width = 8, height = 6)
+
+svg(file.path(dst, "heatmap_first_dviv.svg"), 
+                width = 8, height = 6)
 print(heatmap)
 dev.off()
 
-#save as svg
-svg(file.path(OUTPUT_PATH, "heatmap_starters_dviv.svg"), 
-                width = 8, height = 6)
+pdf(file = file.path(dst, "heatmap_first_dviv.pdf"),
+                      width = 8, height = 6)
 print(heatmap)
 dev.off()
 
 ## Correlation between Covariates
 cov <- matching_df[c("Bias",
-                      "anger_log", "fear_log", 
-                      "disgust_log", "sadness_log",
+                      "anger_log", "fear_log", "disgust_log", "sadness_log", 
                       "joy_log", "pride_log", "hope_log",
                       "word_count_log",
                       "author.followers_count_log",
                       "author.following_count_log",
-                      "author.tweet_count_log"
-                      )
+                      "author.tweet_count_log",
+                      "author.tweet_count_first_log")
                     ]
 
 means <- round(colMeans(cov), 2)
@@ -199,35 +209,30 @@ means <- round(colMeans(cov), 2)
 std_devs <- round(apply(cov, 2, sd), 2)
 
 #combine means and standard deviations into a new dataframe
-summary_stats_cov <- data.frame(
-                              Variable = names(cov), 
+summary_stats_cov <- data.frame(Variable = names(cov), 
                               Mean = means, 
                               SD = std_devs)
 
 #save as csv
 write.csv(summary_stats_cov, 
-          file = file.path(OUTPUT_PATH, "summary_stats_starters_cov.csv")
+          file = file.path(dst, "summary_stats_first_cov.csv")
           )
 
 #save as latex table
 stargazer(summary_stats_cov, type = "latex", 
-          out = file.path(OUTPUT_PATH,"summary_stats_starters_cov.tex")
-      
+          out = file.path(dst,"summary_stats_first_cov.tex")
       )
-
 
 #create correlation matrix
 save_correlation_matrix(df = cov,
-                        filename = file.path(OUTPUT_PATH,"correlation_matrix_cov.csv"),
+                        filename = file.path(dst,"correlation_matrix_first_cov.csv"),
                         digits = 2,
                         use = "lower")
 
 #save as latex table
 stargazer(cov, type = "latex", 
-          out = file.path(OUTPUT_PATH, "correlation_matrix_starters_cov.tex")
-          
-)
-
+          out = file.path(dst, "correlation_matrix_first_cov.tex")
+          )
 
 corr_matrix_cov <- cor(cov)
 correlation_data_cov <- melt(corr_matrix_cov)
@@ -243,29 +248,28 @@ heatmap <- ggplot(correlation_data_cov, aes(Var1, Var2, fill = value)) +
   theme(
     axis.text.x = element_text(size = 14, angle = 45, hjust = 1),  
     axis.text.y = element_text(size = 14),
-    axis.title.x = element_blank(),                              
-    axis.title.y = element_blank()        
+    axis.title = element_blank()
   )
 
-#save plot with adjusted size (width and height)
-svg(file.path(OUTPUT_PATH, "heatmap_starters_cov.svg"), 
+svg(file.path(dst, "heatmap_first_cov.svg"), 
                 width = 8, height = 6)
 print(heatmap)
 dev.off()
 
-pdf(file = file.path(OUTPUT_PATH, "heatmap_starters_cov.pdf"),
+pdf(file = file.path(dst, "heatmap_first_cov.pdf"),
                       width = 8, height = 6)
 print(heatmap)
 dev.off()
-
+  
 # Matching
 ## Pre-Matching Object
-#constructing a pre-match matchit object
+
 print('Pre-Matching Object')
+#constructing a pre-match matchit object
 m.nomatch <- matchit(formula,
-                    data = matching_df, 
-                    method = NULL, 
-                    distance = "glm")
+                      data = matching_df, 
+                      method = NULL, 
+                      distance = "glm")
 
 summary_table <- summary(m.nomatch)
 print('Problematic variables:')
@@ -274,27 +278,25 @@ print(summary_table$Problematic)
 summary_final <- as.data.frame(summary_table$sum.all)
 summary_final <- round(summary_final, digits = 4)
 write.csv(summary_final, 
-          file = file.path(OUTPUT_PATH, "summary_starters_pre_match.csv")
+          file = file.path(dst, "summary_pre_match_first.csv")
           )
 
 #save as latex table
 stargazer(summary_final, type = "latex", 
-          out = file.path(OUTPUT_PATH,"summary_starters_pre_match.tex")
-          
-)
+          out = file.path(dst,"summary_pre_match_first.tex")
+          )
 
 ## Nearest neighbor matching
 ### Mahalanobis distance
 print('Mahalanobis distance')
-m.out_nearest_mahalanobis <- matchit(
-                    formula,
-                    data = matching_df, 
-                    method = "nearest", 
-                    distance = "mahalanobis")
+m.out_nearest_mahalanobis <- matchit(formula,
+                                      data = matching_df, 
+                                      method = "nearest", 
+                                      distance = "mahalanobis")
 
 #save matched data
 m.data_nearest_mahalanobis <- match.data(m.out_nearest_mahalanobis)
-MATCHED_PATH <- file.path(DIR_PATH, "matched_starters_mahalanobis.csv")
+MATCHED_PATH <- file.path(dir, "matched_replies_first_mahalanobis.csv")
 write.csv(m.data_nearest_mahalanobis, file = MATCHED_PATH)
 
 #save summary values after matching
@@ -305,56 +307,50 @@ print(summary_table$Problematic)
 summary_final <- as.data.frame(summary_table$sum.matched)
 summary_final <- round(summary_final, digits = 4)
 write.csv(summary_final, 
-          file = file.path(OUTPUT_PATH,"summary_starters_nearest_mahalanobis.csv")
+          file = file.path(dst,"summary_nearest_mahalanobis_first.csv")
           )
 
 #save plot
-pdf(file = file.path(OUTPUT_PATH, "starters_mahalanobis_plot.pdf"),
+pdf(file = file.path(dst, "mahalanobis_plot_first.pdf"),
       width = 8, height = 6)
 plot(summary_table)
 dev.off()
 
-# save as svg
-svg(file = file.path(OUTPUT_PATH, "starters_mahalanobis_plot.svg"),
-      width = 8, height = 6)
+svg(file.path(dst, "mahalanobis_plot_first.svg"), 
+                width = 8, height = 6)
 plot(summary_table)
 dev.off()
-
         
 ### GLM distance
 print('GLM distance')
-m.out_nearest_glm <- matchit(
-                      formula,
-                      data = matching_df, 
-                      method = "nearest", 
-                      distance = "glm")
+m.out_nearest_glm <- matchit(formula,
+                              data = matching_df, 
+                              method = "nearest", 
+                              distance = "glm")
 
-#save matched data
+#save data
 m.data_nearest_glm <- match.data(m.out_nearest_glm)
-
-#save csv
-MATCHED_PATH <- file.path(DIR_PATH, "matched_starters_glm.csv")
+MATCHED_PATH <- file.path(dir, "matched_replies_first_glm.csv")
 write.csv(m.data_nearest_glm, file = MATCHED_PATH)
 
-#save summary values after matching
+#save summary table
 summary_table <- summary(m.out_nearest_glm)
 print('GLM problematic variables:')
 print(summary_table$Problematic) 
 
 summary_final <- as.data.frame(summary_table$sum.matched)
 summary_final <- round(summary_final, digits = 4)
-
 write.csv(summary_final, 
-            file = file.path(OUTPUT_PATH,"summary_starters_nearest_glm.csv")
+            file = file.path(dst,"summary_nearest_glm_first.csv")
             )
 
 #save plot
-pdf(file = file.path(OUTPUT_PATH, "starters_glm_plot.pdf"),
+pdf(file = file.path(dst, "glm_plot_first.pdf"),
       width = 8, height = 6)
 plot(summary_table)
 dev.off()
 
-svg(file = file.path(OUTPUT_PATH, "starters_glm_plot.svg"),
-      width = 8, height = 6)
+svg(file.path(dst, "glm_plot_first.svg"), 
+                width = 8, height = 6)
 plot(summary_table)
 dev.off()

@@ -7,19 +7,19 @@ import sys
 import numpy as np
 np.random.seed(63) 
 
-DIR_PATH = sys.argv[1] 
-OUTPUT_PATH = sys.argv[2] 
+src = sys.argv[1] 
+dst = sys.argv[2] 
 dfs = []
 
 ''' ROUND 1 ANNOTATIONS '''
 emotion_cols = ["Wut", "Angst", "Ekel", "Traurigkeit",
                 "Freude", "Begeisterung", "Stolz", "Hoffnung"]
 
-files_r1 = [f for f in os.listdir(DIR_PATH) 
+files_r1 = [f for f in os.listdir(src) 
          if re.match(r"Emotion.*\.xlsx", f)]
 
 for f in files_r1:
-        df1 = pd.read_excel(join(DIR_PATH, f), 
+        df1 = pd.read_excel(join(src, f), 
                            usecols=["ID", "Text"] + emotion_cols,
                            dtype={"ID": str,
                                   "Text": str})
@@ -29,11 +29,11 @@ for f in files_r1:
         dfs.append(df1)
 
 ''' ROUND 2 ANNOTATIONS '''
-files_r2 = [f for f in os.listdir(DIR_PATH) 
+files_r2 = [f for f in os.listdir(src) 
          if re.match(r"Annotations.*\.xlsx", f)]
 
 for f in files_r2:
-        df2 = pd.read_excel(join(DIR_PATH, f), 
+        df2 = pd.read_excel(join(src, f), 
                            usecols=["ID", "Text"] + emotion_cols,
                            dtype={"ID": str, 
                                   "Text": str})
@@ -122,7 +122,7 @@ for emotion in emotion_cols:
     #save the shuffled means
     shuffled_metrics_df = pd.DataFrame(shuffled_means, 
                                        columns=["perc_agree_shuff"])
-    shuffled_metrics_df.to_csv(join(OUTPUT_PATH,
+    shuffled_metrics_df.to_csv(join(dst,
                                 f'./permutations/{emotion}_shuffled.csv'),
                                 index=False)
 
@@ -141,7 +141,7 @@ for emotion in emotion_cols:
     })
 
 df_results_collapsed = pd.DataFrame(results_collapsed)
-df_results_collapsed.to_csv(join(OUTPUT_PATH, 
+df_results_collapsed.to_csv(join(dst, 
                                  "agreement_perc_collapsed_800.csv"),
                         index=False)      
     

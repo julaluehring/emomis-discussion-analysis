@@ -5,17 +5,17 @@ import sys
 import pickle
 import re
 
-DIR_PATH = sys.argv[1]
-VAL_PATH = join(DIR_PATH, "validation/")
+src = sys.argv[1]
+val = sys.argv[2]
 
-with open(join(DIR_PATH, 
+with open(join(src, 
                "dtypes_config.pickle"),
                 "rb") as file:
     DTYPES = pickle.load(file)
 
 ''' LOAD INFERENCES '''
 df_inference = pd.read_csv(join(
-                    DIR_PATH,
+                    src,
                     "german_newsguard_tweets_inference.csv.gz"),
                  compression="gzip",
                  usecols=["id", 
@@ -30,11 +30,11 @@ dfs = []
 emotion_cols = ["Wut", "Angst", "Ekel", "Traurigkeit",
                 "Freude", "Begeisterung", "Stolz", "Hoffnung"]
 
-files = [f for f in os.listdir(VAL_PATH) 
+files = [f for f in os.listdir(val) 
          if re.match(r"Emotion.*\.xlsx", f)]
 
 for f in files:
-        df = pd.read_excel(join(VAL_PATH, f), 
+        df = pd.read_excel(join(val, f), 
                            usecols=["ID", "Text"] + emotion_cols,
                            dtype={"ID": int,
                                   "Text": str})
@@ -47,11 +47,11 @@ for f in files:
 emotion_cols_2 = ["Wut", "Angst", "Ekel", "Trauer",
                 "Freude", "Enthusiasmus", "Stolz", "Hoffnung"]
 
-files = [f for f in os.listdir(VAL_PATH) 
+files = [f for f in os.listdir(val) 
          if re.match(r"Annotations.*\.xlsx", f)]
 
 for f in files:
-        df = pd.read_excel(join(VAL_PATH, f), 
+        df = pd.read_excel(join(val, f), 
                            usecols=["id", "text"] + emotion_cols_2,
                            dtype={"id": int, 
                                   "text": str})
@@ -128,7 +128,6 @@ df_validation = df_wide\
 
 print(f'Validation data shape: {df_validation.shape}.')
 print(f'Number of unique tweets: {df_validation["id"].nunique()}.')
-                                  
-df_validation.to_csv(join(VAL_PATH, 
-                          "emotion_validation_mode.csv"), 
-                          index=False)
+
+df_validation.to_csv(join(val, "emotion_validation_mode.csv"), 
+                      index=False)

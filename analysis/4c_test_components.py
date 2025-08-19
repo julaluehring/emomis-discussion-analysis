@@ -15,11 +15,11 @@ pd.options.mode.chained_assignment = None
 
 N_ITER = 10000
 
-# python boot_discussions.py /raid5pool/tank/luehring/german_newsguard_tweets
-DIR = sys.argv[1] #"/raid5pool/tank/luehring/german_newsguard_tweets"
-with open(join(DIR, "dtypes_config.pickle"), "rb") as file:
+src = sys.argv[1] #"../data"
+dst = sys.argv[2] #"./newsguard"
+with open(join(src, "dtypes_config.pickle"), "rb") as file:
     DTYPES = pkl.load(file)
-DATA_DIR = DIR + "/discussions"
+
 
 def read_data(data_dir, pattern):
     for file_path in Path(data_dir).glob(pattern):
@@ -37,10 +37,10 @@ def read_data(data_dir, pattern):
         except Exception as e:
             print(f"Error processing file {file_path}: {e}")
     
-replies = read_data(DATA_DIR, "matched_replies_mahalanobis_log_bias.csv")
-first = read_data(DATA_DIR, "matched_replies_first_mahalanobis_log_bias.csv")
+replies = read_data(src, "matched_replies.csv")
+first = read_data(src, "matched_replies_first.csv")
 
-criteria = pd.read_csv(join(DIR,"newsguard_criteria.csv"),
+criteria = pd.read_csv(join(dst,"newsguard_criteria.csv"),
                        dtype=DTYPES)
 
 criteria = criteria[
@@ -189,12 +189,10 @@ for crit in CRITERIA:
                         DVS_REPLIES, 
                         IV,
                         COVARIATES, 
-                        "./replies/criteria_coeffs_{}.csv".format(IV))
-    # print("Bootstrapping for replies")
-    # bootstrap_ols(df_replies, 
-    #           DVS_REPLIES, IV, COVARIATES, 
-    #           N_ITER, 
-    #           "./replies/replies_coeffs_{}_boot.csv")
+                        join(dst,"./criteria_replies/replies_coeffs_{}.csv".format(IV)
+                             )
+                        )
+
     
 for crit in CRITERIA:
     IV = crit
@@ -203,7 +201,11 @@ for crit in CRITERIA:
                         DVS_REPLIES, 
                         IV,
                         COVARIATES, 
-                        "./first_replies/criteria_coeffs_{}.csv".format(IV))
+                        join(dst,
+                        "./criteria_first/replies_first_coeffs_{}.csv".format(IV)
+                            )
+                        )
+    
     
     # print("Bootstrapping for first replies...")
     # bootstrap_ols(df_first, 

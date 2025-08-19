@@ -20,10 +20,10 @@ set_directory = os.getcwd()
 print("Working directory set to:", set_directory)
 
 # set data directory
-DATA_DIR = sys.argv[1] 
-DATA_NAME = sys.argv[2]
+src = sys.argv[1] 
+file = sys.argv[2]
 
-df = pd.read_csv(os.path.join(DATA_DIR,DATA_NAME), 
+df = pd.read_csv(os.path.join(src,file), 
                                 compression="gzip",
                                 usecols=["id", "domain", "text_cleaned"],
                                 dtype={"id": int, "domain":str, "text_cleaned":str},
@@ -140,7 +140,7 @@ def predict_labels(df):
             output_df = pd.concat([input_df, output_df], axis=1)
 
             # Append to an existing CSV file or create a new one
-            output_df.to_csv(os.path.join(DATA_DIR, 'emotion_inference.csv.gz'), mode='a', index=False, header=not os.path.exists(os.path.join(DATA_DIR, 'emotion_inference.csv.gz')), compression="gzip")
+            output_df.to_csv(os.path.join(src, 'emotion_inference.csv.gz'), mode='a', index=False, header=not os.path.exists(os.path.join(src, 'emotion_inference.csv.gz')), compression="gzip")
 
     except KeyboardInterrupt:
         print("KeyboardInterrupt.")

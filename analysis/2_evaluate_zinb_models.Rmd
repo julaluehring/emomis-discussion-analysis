@@ -1,0 +1,449 @@
+```{r}
+rm(list = ls())
+
+require(dplyr)
+require(kableExtra)
+require(stringr)
+require(MASS)
+require(pscl)
+require(kableExtra)
+require(DHARMa)
+require(cowplot)
+require(car)
+require(tidyverse)
+
+set.seed(636)
+options(scipen = 999)
+```
+```{r}
+setwd("emomis-discussion-analysis/analysis/")
+dst <- "./engagement/"
+```
+
+
+```{r}
+src <- "emomis-discussion-analysis/data/"
+df_regression <- read_csv(file.path(src, "matched_starters.csv")) 
+
+summary <- df_regression %>%
+  group_by(Rating) %>%
+  summarise(
+    M_likes    = mean(like_count, na.rm = TRUE),
+    Max_likes     = max(like_count, na.rm = TRUE),
+    Zeroes_likes = sum(like_count == 0, na.rm = TRUE),
+    Pzeroes_likes = sum(like_count == 0, na.rm = TRUE) / n(),
+    
+    M_quotes   = mean(quote_count, na.rm = TRUE),
+    Max_quotes    = max(quote_count, na.rm = TRUE),
+    Zeroes_quotes = sum(quote_count == 0, na.rm = TRUE),
+    Pzeroes_quotes = sum(quote_count == 0, na.rm = TRUE) / n(),
+
+    M_replies  = mean(reply_count, na.rm = TRUE),
+    Max_replies   = max(reply_count, na.rm = TRUE),
+    Zeroes_replies = sum(reply_count == 0, na.rm = TRUE),
+    Pzeroes_replies = sum(reply_count == 0, na.rm = TRUE) / n(),
+
+    M_retweets = mean(retweet_count, na.rm = TRUE),
+    Max_retweets  = max(retweet_count, na.rm = TRUE),
+    Zeroes_retweets = sum(retweet_count == 0, na.rm = TRUE),
+    Pzeroes_retweets = sum(retweet_count == 0, na.rm = TRUE) / n()
+  )
+
+df_regression_filtered <- df_regression %>%
+  filter(like_count > 0,
+         quote_count > 0,
+         reply_count > 0,
+         retweet_count > 0) 
+
+non_zero_summary <- df_regression_filtered %>%
+  group_by(Rating) %>%
+  summarise(
+    Mcount_likes    = mean(like_count, na.rm = TRUE),
+    Mcount_quotes   = mean(quote_count, na.rm = TRUE),
+    Mcount_replies  = mean(reply_count, na.rm = TRUE),
+    Mcount_retweets = mean(retweet_count, na.rm = TRUE),
+  )
+
+summary <- summary %>%
+  left_join(non_zero_summary, by = "Rating") %>%
+  mutate(
+    Pzeroes_likes = round(P_zeroes_likes, 3),
+    Pzeroes_quotes = round(P_zeroes_quotes, 3),
+    Pzeroes_replies = round(P_zeroes_replies, 3),
+    Pzeroes_retweets = round(P_zeroes_retweets, 3)
+  )
+
+summary
+```
+
+
+
+## Load negative binomial models with and without zero inflation
+```{r}
+like_zinb <- readRDS("./engagement/zinb/like_count_zinb_model.rds")
+quote_zinb <- readRDS("./engagement/zinb/quote_count_zinb_model.rds")
+reply_zinb <- readRDS("./engagement/zinb/reply_count_zinb_model.rds")
+retweet_zinb <- readRDS("./engagement/zinb/retweet_count_zinb_model.rds")
+
+like_zinb_model <- like_zinb$model
+quote_zinb_model <- quote_zinb$model
+reply_zinb_model <- reply_zinb$model
+retweet_zinb_model <- retweet_zinb$model
+```
+
+```{r}
+like_nb <- readRDS("./engagement/nb/like_count_nb_model.rds")
+quote_nb <- readRDS("./engagement/nb/quote_count_nb_model.rds")
+reply_nb <- readRDS("./engagement/nb/reply_count_nb_model.rds")
+retweet_nb <- readRDS("./engagement/nb/retweet_count_nb_model.rds")
+
+like_nb_model <- like_nb$model
+quote_nb_model <- quote_nb$model
+reply_nb_model <- reply_nb$model
+retweet_nb_model <- retweet_nb$model
+```
+
+## Compare model fit
+```{r}
+like_poisson <- read.csv("./engagement/poisson/like_count_pois_fit.csv")
+quote_poisson <- read.csv("./engagement/poisson/quote_count_pois_fit.csv")
+reply_poisson <- read.csv("./engagement/poisson/reply_count_pois_fit.csv")
+retweet_poisson <- read.csv("./engagement/poisson/retweet_count_pois_fit.csv")
+
+poisson_fit <- data.frame(
+  DV = c("Likes", "Quotes", "Replies", "Retweets"),
+  Model = c("Poisson","Poisson", "Poisson", "Poisson"),
+  LogLik = c(like_poisson$logLik, quote_poisson$logLik, reply_poisson$logLik, retweet_poisson$logLik),
+  AIC = c(like_poisson$AIC, quote_poisson$AIC, reply_poisson$AIC, retweet_poisson$AIC),
+  BIC = c(like_poisson$BIC, quote_poisson$BIC, reply_poisson$BIC, retweet_poisson$BIC),
+  Theta = NA
+)
+poisson_fit
+```
+
+```{r}
+zinb_fit <- data.frame(
+  DV = c("Likes", "Quotes", "Replies", "Retweets"),
+  Model = c("ZINB","ZINB", "ZINB", "ZINB"),
+  LogLik = c(logLik(like_zinb_model), logLik(quote_zinb_model), logLik(reply_zinb_model), logLik(retweet_zinb_model)),
+  AIC = c(AIC(like_zinb_model), AIC(quote_zinb_model), AIC(reply_zinb_model), AIC(retweet_zinb_model)),
+  BIC = c(BIC(like_zinb_model), BIC(quote_zinb_model), BIC(reply_zinb_model), BIC(retweet_zinb_model)),
+  Theta = c(like_zinb_model$theta, quote_zinb_model$theta, reply_zinb_model$theta, retweet_zinb_model$theta)
+)
+
+zinb_fit
+```
+
+
+```{r}
+# create a table with DV, model, loglik, AIC, BIC, theta, ZI test for NB models
+nb_fit <- data.frame(
+  DV = c("Likes", "Quotes", "Replies", "Retweets"),
+  Model = c("NB","NB", "NB", "NB"),
+  LogLik = c(logLik(like_nb_model), logLik(quote_nb_model), logLik(reply_nb_model), logLik(retweet_nb_model)),
+  AIC = c(AIC(like_nb_model), AIC(quote_nb_model), AIC(reply_nb_model), AIC(retweet_nb_model)),
+  BIC = c(BIC(like_nb_model), BIC(quote_nb_model), BIC(reply_nb_model), BIC(retweet_nb_model)),
+  Theta = c(like_nb_model$theta, quote_nb_model$theta, reply_nb_model$theta, retweet_nb_model$theta)
+) 
+nb_fit
+```
+
+## Create model summary tables
+```{r}
+create_zinb_table <- function(model, dv) {
+  # load model summary csv
+  model_summary <- read.csv(paste0("./zinb/", dv, "_zinb_summary.csv"))
+  
+  # extract Zero for Rating term
+  rating_zero <- model_summary %>%
+    filter(term == "Rating", component == "zero") %>%
+    mutate(
+      `95%CI` = paste0(round(conf_low, 3), ", ", round(conf_high, 3)),
+      OR = round(exp(estimate), 3)
+    ) %>%
+    dplyr:::select(estimate, std_error, p_value, `95%CI`, OR) %>%
+    rename(
+      Estimate = estimate,
+      `SE` = std_error,
+      `p` = p_value
+    )
+
+  # extract Count for Rating term
+  rating_count <- model_summary %>%
+    filter(term == "Rating", component == "count") %>%
+    mutate(
+      `95%CI` = paste0(round(conf_low, 3), ", ", round(conf_high, 3)),
+      IRR = round(exp(estimate), 3),
+      PC = round((exp(estimate) - 1) * 100, 3)
+    ) %>%
+    dplyr:::select(estimate, std_error, p_value, `95%CI`, IRR, PC) %>%
+    rename(
+      Estimate = estimate,
+      `SE` = std_error, 
+      `p` = p_value
+    )
+  # combine both rows
+  rating_zero["Component"] <- "Zero"
+  rating_count["Component"] <- "Count"
+  combined_row <- bind_rows(rating_zero, rating_count)
+  combined_row["DV"] <- str_replace(dv, "_count", "")%>%
+                    str_to_title()
+
+  combined_row <-combined_row%>%
+    dplyr::select(DV, Component, everything())
+
+  
+  return(combined_row)
+}
+
+like_zinb_table <- create_zinb_table(like_zinb, "like_count")
+quote_zinb_table <- create_zinb_table(quote_zinb, "quote_count")
+reply_zinb_table <- create_zinb_table(reply_zinb, "reply_count")
+retweet_zinb_table <- create_zinb_table(retweet_zinb, "retweet_count")
+
+zinb_table <- bind_rows(
+  like_zinb_table,
+  quote_zinb_table,
+  reply_zinb_table,
+  retweet_zinb_table)
+
+zinb_table %>%
+  kable("latex", 
+        booktabs = TRUE,
+        digits = 3,
+        linesep = "",
+        align = c("l", rep("r", 8))) %>%
+  save_kable(file.path(dst, "zinb_table.tex"))
+
+zinb_table
+```
+
+```{r}
+create_nb_table <- function(dv) {
+  # load model summary csv
+  model_summary <- read.csv(paste0("./nb/", dv, "_nb_summary.csv"))
+
+  # extract Zero for Rating term
+  rating_row <- model_summary %>%
+    filter(term == "Rating") %>%
+    mutate(
+      `95%CI` = paste0(round(conf.low, 3), ", ", round(conf.high, 3))
+    ) %>%
+    dplyr:::select(estimate, std.error, p.value, `95%CI`, IRR, PC) %>%
+    rename(
+      Estimate = estimate,
+      `SE` = std.error,
+      `p` = p.value
+    )
+  rating_row["DV"] <- str_replace(dv, "_count", "")%>%
+    str_to_title()
+
+  return(rating_row)
+}
+
+like_nb_table <- create_nb_table("like_count")
+quote_nb_table <- create_nb_table("quote_count")
+reply_nb_table <- create_nb_table("reply_count")
+retweet_nb_table <- create_nb_table("retweet_count")
+
+nb_table <- bind_rows(
+  like_nb_table,
+  quote_nb_table,
+  reply_nb_table,
+  retweet_nb_table)%>%
+  arrange(DV)%>%
+  dplyr::select(DV, everything())
+
+nb_table %>%
+  kable("latex", 
+        booktabs = TRUE,
+        digits = 3,
+        linesep = "",
+        align = c("l", rep("r", 6))) %>%
+  save_kable(file.path(dst, "nb_table.tex"))
+
+nb_table
+```
+
+
+## Run DHARMa model diagnostics
+```{r}
+like_nb_dh <- readRDS("./engagement/nb/like_count_nb_dharma.rds")
+quote_nb_dh <- readRDS("./engagement/nb/quote_count_nb_dharma.rds")
+reply_nb_dh <- readRDS("./engagement/nb/reply_count_nb_dharma.rds")
+retweet_nb_dh <- readRDS("./engagement/nb/retweet_count_nb_dharma.rds")
+```
+
+```{r}
+z_test_like <- testZeroInflation(like_nb_dh)
+z_test_quote <- testZeroInflation(quote_nb_dh)
+z_test_reply <- testZeroInflation(reply_nb_dh)
+z_test_retweet <- testZeroInflation(retweet_nb_dh)
+
+zero_test <- data.frame(
+  DV = c("Likes", "Quotes", "Replies", "Retweets"),
+  ZI = c(
+    z_test_like$statistic,
+    z_test_quote$statistic,
+    z_test_reply$statistic,
+    z_test_retweet$statistic
+  ),
+  p = c(
+    z_test_like$p.value,
+    z_test_quote$p.value,
+    z_test_reply$p.value,
+    z_test_retweet$p.value
+  )
+)
+zero_test
+```
+
+
+```{r}
+#merge zero_test with nb_fit
+nb_fit <- nb_fit %>%
+  left_join(zero_test, by = "DV")
+# bind together and sort by D
+model_fit <- bind_rows(poisson_fit, nb_fit, zinb_fit)%>%
+              arrange(DV, Model)
+model_fit %>%
+  kable("latex", 
+        booktabs = TRUE,
+        digits = 3,
+        linesep = "",
+        align = c("l", "l", rep("r", 7))) %>%
+  save_kable(file.path(dst, "all_models_fit.tex"))
+
+model_fit
+```
+
+
+## Compare QQ plots
+```{r}
+dharma_nb <- list(
+  like_nb = like_nb_dh,
+  quote_nb = quote_nb_dh,
+  reply_nb = reply_nb_dh,
+  retweet_nb = retweet_nb_dh
+)
+
+par(mfrow = c(2, 2))
+for (name in names(dharma_nb)) {
+  sim_res <- dharma_nb[[name]]
+  plotQQunif(simulationOutput = sim_res,
+             testDispersion = TRUE,
+             testUniformity = TRUE,
+             testOutliers = TRUE,
+             main = name)
+}
+par(mfrow = c(1, 1))
+```
+
+
+```{r}
+like_zinb_dh <- readRDS("./engagement/zinb/like_count_zinb_dharma.rds")
+quote_zinb_dh <- readRDS("./engagement/zinb/quote_count_zinb_dharma.rds")
+reply_zinb_dh <- readRDS("./engagement/zinb/reply_count_zinb_dharma.rds")
+retweet_zinb_dh <- readRDS("./engagement/zinb/retweet_count_zinb_dharma.rds")
+
+dharma_zinb <- list(
+  like_zinb = like_zinb_dh,
+  quote_zinb = quote_zinb_dh,
+  reply_zinb = reply_zinb_dh,
+  retweet_zinb = retweet_zinb_dh
+)
+
+par(mfrow = c(2, 2))
+for (name in names(dharma_zinb)) {
+  plotQQunif(simulationOutput = dharma_zinb[[name]],
+             testDispersion = TRUE,
+             testUniformity = TRUE,
+             testOutliers = TRUE,
+             main = name)
+}
+par(mfrow = c(1, 1))
+```
+
+## Save plots with subsets for faster plotting
+
+```{r}
+dharma_nb_objects <- list()
+
+for (name in names(dharma_nb)) {
+  dh_data <- dharma_nb[[name]] 
+  n_total <- length(dh_data$observedResponse)
+  n_subset <- min(1000, n_total)
+  subset_indices <- sort(sample(n_total, n_subset))
+  
+  # re-create DHARMa object with subset
+  sim_res <- createDHARMa(
+    simulatedResponse = dh_data$simulatedResponse[subset_indices, ],
+    observedResponse = dh_data$observedResponse[subset_indices],
+    fittedPredictedResponse = dh_data$fittedPredictedResponse[subset_indices],
+    integerResponse = TRUE
+  )
+
+  dharma_nb_objects[[name]] <- sim_res
+}
+
+dvs <- c("like_count", "retweet_count", "reply_count", "quote_count")
+plot_titles <- c("Likes", "Retweets", "Replies", "Quotes")
+pdf(paste0(dst, "nb_dharma_plots.pdf"), 
+            width = 6.5, height = 6.5)
+par(mfrow = c(2, 2))
+for (i in seq_along(dvs)) {
+  dv <- dvs[i]
+  title <- plot_titles[i]
+  dv_name <- paste0(gsub("_count", "", dv), "_nb")
+  plotQQunif(simulationOutput = dharma_nb_objects[[dv_name]],
+             testDispersion = FALSE,
+             testUniformity = FALSE,
+             testOutliers = FALSE,
+             main = title)
+}
+
+par(mfrow = c(1, 1))
+dev.off()
+```
+
+```{r}
+dharma_zinb_objects <- list()
+
+for (name in names(dharma_zinb)) {
+  dh_data <- dharma_zinb[[name]]
+  n_total <- length(dh_data$observedResponse)
+  n_subset <- min(1000, n_total)
+  subset_indices <- sort(sample(n_total, n_subset))
+
+  # re-create DHARMa object with less data
+  sim_res <- createDHARMa(
+    simulatedResponse = dh_data$simulatedResponse[subset_indices, ],
+    observedResponse = dh_data$observedResponse[subset_indices],
+    fittedPredictedResponse = dh_data$fittedPredictedResponse[subset_indices],
+    integerResponse = TRUE
+  )
+
+  dharma_zinb_objects[[name]] <- sim_res
+}
+
+pdf(paste0(dst, "zinb_dharma_plots.pdf"), 
+            width = 6.5, height = 6.5)
+
+par(mfrow = c(2, 2))
+
+for (i in seq_along(dvs)) {
+  dv <- dvs[i]
+  title <- plot_titles[i]
+  dv_name <- paste0(gsub("_count", "", dv), "_zinb")
+
+  plotQQunif(simulationOutput = dharma_zinb_objects[[dv_name]],
+             testDispersion = FALSE,
+             testUniformity = FALSE,
+             testOutliers = FALSE,
+             main = title)
+}
+par(mfrow = c(1, 1))
+
+dev.off()
+```
+

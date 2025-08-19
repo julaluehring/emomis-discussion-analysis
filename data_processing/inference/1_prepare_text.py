@@ -4,9 +4,9 @@ import re
 import sys
 
 #load data set with dtypes
-DIR = sys.argv[1]
+dir = sys.argv[1]
 
-df = pd.read_csv(os.path.join(DIR,"german_newsguard_tweets.csv.gz"), 
+df = pd.read_csv(os.path.join(dir,"german_newsguard_tweets.csv.gz"), 
                                 compression="gzip",
                                 usecols=["id", "domain", "lang", "text"],
                                 dtype={"id": str, "domain":str, "lang":str, "text":str}, 
@@ -59,7 +59,7 @@ df_cleaned = df_cleaned[df_cleaned["text_cleaned"] != ""] #remove empty strings
 print(f'Length of cleaned df without empty strings: {len(df_cleaned)}')
 
 #save cleaned data
-df_cleaned.to_csv(os.path.join(DIR, "german_newsguard_text.csv.gz"), 
+df_cleaned.to_csv(os.path.join(dir, "german_newsguard_text.csv.gz"), 
                             mode="w", compression="gzip", 
                             columns=["id", "domain", "text_cleaned"],
                             header=True)

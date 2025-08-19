@@ -15,11 +15,9 @@ pd.options.mode.chained_assignment = None
 
 N_ITER = 10000
 
-# python boot_discussions.py /raid5pool/tank/luehring/german_newsguard_tweets
-DIR = sys.argv[1] #"/raid5pool/tank/luehring/german_newsguard_tweets"
-with open(join(DIR, "dtypes_config.pickle"), "rb") as file:
+src = sys.argv[1] #"../data/"
+with open(join(src, "./dtypes_config.pickle"), "rb") as file:
     DTYPES = pkl.load(file)
-DATA_DIR = DIR + "/discussions"
 
 def read_data(data_dir, pattern):
     for file_path in Path(data_dir).glob(pattern):
@@ -37,8 +35,8 @@ def read_data(data_dir, pattern):
         except Exception as e:
             print(f"Error processing file {file_path}: {e}")
     
-replies = read_data(DATA_DIR, "matched_replies_mahalanobis_log_bias.csv")
-first = read_data(DATA_DIR, "matched_replies_first_mahalanobis_log_bias.csv")
+replies = read_data(src, "matched_replies.csv")
+first = read_data(src, "matched_replies_first.csv")
 
 #define relevant columns
 IV = "Rating"
@@ -68,7 +66,8 @@ df_replies = replies[reply_columns]
 first_columns = [IV] + DVS_FIRST + COVARIATES_FIRST
 df_first = first[first_columns]
 
-def compute_full_models(df, dvs, iv, covariates, coeff_path, model_path):
+
+def fit_models(df, dvs, iv, covariates, coeff_path):
     coefficients_df = pd.DataFrame(
         columns=["DV", "Coefficient", "SE",
                  "CI_Lower", "CI_Upper",
@@ -110,27 +109,45 @@ def compute_full_models(df, dvs, iv, covariates, coeff_path, model_path):
                 "Cond_Mean": [cond_mean]
             })], ignore_index=True)
         
-    #save as csv
     coefficients_df.to_csv(coeff_path, index=False)
-    with open(model_path, "wb") as file:
-        pkl.dump(models, file)
-    
-#define function to bootstrap OLS
-def bootstrap_ols(df, dvs, iv, covariates, n_iter, output_file):
-    bootstrap_results = []
-    n_rows = len(df)
-    for dv in tqdm(dvs, desc="Bootstrapping DVs"):
-        for i in range(n_iter):
-            sample_indices = np.random.choice(n_rows, size=n_rows, replace=True)
-            sample = df.iloc[sample_indices]
-            X = sample[[iv] + covariates]
-            y = sample[dv]
-            X = sm.add_constant(X)
-            model = sm.OLS(y, X).fit()
 
-            coefficient = model.params[iv]
-            ci_lower = model.conf_int().loc[iv, 0]
-            ci_upper = model.conf_int().loc[iv, 1]
+
+def residual_bootstrap(df, dvs, iv, covariates, n_iter, output_file):
+
+    bootstrap_results = []
+    
+    for dv in tqdm(dvs, desc="Residual Bootstrapping DVs"):
+        # fit original model 
+        X = df[[iv] + covariates].copy()
+        X = sm.add_constant(X)
+        y = df[dv].copy()
+        
+        # remove missing values
+        combined = pd.concat([X, y], axis=1).dropna()
+        X_clean = combined.iloc[:, :-1]
+        y_clean = combined.iloc[:, -1]
+        
+        og_model = sm.OLS(y_clean, X_clean).fit()
+        
+        # extract fitted values and residuals
+        y_fitted = og_model.fittedvalues
+        residuals = og_model.resid
+        
+        # bootstrap residuals
+        for i in range(n_iter):
+            # sample residuals with replacement
+            bootstrap_residuals = np.random.choice(residuals, size=len(residuals), replace=True)
+            
+            # generate new Y values: Y_new = Y_fitted + bootstrap_residuals
+            y_bootstrap = y_fitted + bootstrap_residuals
+            
+            # re-estimate model with new Y but same X
+            bootstrap_model = sm.OLS(y_bootstrap, X_clean).fit()
+            
+            # extract coefficient for IV
+            coefficient = bootstrap_model.params[iv]
+            ci_lower = bootstrap_model.conf_int().loc[iv, 0]
+            ci_upper = bootstrap_model.conf_int().loc[iv, 1]
             
             result = {
                 "DV": dv,
@@ -139,34 +156,33 @@ def bootstrap_ols(df, dvs, iv, covariates, n_iter, output_file):
                 "CI_Upper_boot": ci_upper
             }
             bootstrap_results.append(result)
-
-            #periodically save results every 100 iterations or at the end
-            if (i + 1) % 100 == 0 or (dv == dvs[-1] and i == n_iter - 1):  
-                
+            
+            # save periodically
+            if (i + 1) % 100 == 0 or (dv == dvs[-1] and i == n_iter - 1):
                 pd.DataFrame(bootstrap_results).to_csv(output_file, 
                                                        index=False, 
                                                        mode='a', 
                                                        header=not Path(output_file).exists())
-                bootstrap_results = [] #clear to save memory
+                bootstrap_results = []
+
+print("Computing full models for replies")
+fit_models(df_replies, DVS_REPLIES, IV, COVARIATES, 
+            "./replies/replies_coeffs.csv")
+
+print("Computing full models for first replies")
+fit_models(df_first, DVS_FIRST, IV, COVARIATES_FIRST, 
+            "./replies_first/first_replies_coeffs.csv")
+print("Residual Bootstrapping for replies")
+residual_bootstrap(df_replies, 
+                      DVS_REPLIES, IV, COVARIATES, 
+                      N_ITER, 
+                      "./replies/replies_res_boot.csv")
+
+print("Residual Bootstrapping for first")
+residual_bootstrap(df_first, 
+                      DVS_FIRST, IV, COVARIATES_FIRST, 
+                      N_ITER,
+                      "./replies_first/replies_first_res_boot.csv")
 
 
-#compute full models
-compute_full_models(df_replies, DVS_REPLIES, IV, COVARIATES,
-                    "./replies/replies_coeffs.csv",
-                    "./replies/replies_models.pkl")
-compute_full_models(df_first, DVS_FIRST, IV, COVARIATES_FIRST,
-                    "./replies/replies_first_coeffs.csv",
-                    "./replies/replies_first_models.pkl")
-
-# #bootstrap OLS
-print("Bootstrapping for replies")
-bootstrap_ols(df_replies, 
-              DVS_REPLIES, IV, COVARIATES, 
-              N_ITER, 
-              "./replies/replies_coeffs_boot.csv")
-
-print("Bootstrapping for first")
-bootstrap_ols(df_first, 
-              DVS_FIRST, IV, COVARIATES_FIRST, 
-              N_ITER,
-                "./replies/replies_first_coeffs_boot.csv")
+print("Saved results.")

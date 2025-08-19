@@ -4,9 +4,9 @@ import os
 import pickle as pkl
 import sys
 
-DIR = sys.argv[1]
+src = sys.argv[1]
 
-with open(os.path.join(DIR, "dtypes_config.pickle"), "rb") as file:
+with open(os.path.join(src, "dtypes_config.pickle"), "rb") as file:
     DTYPES = pkl.load(file)
     
 #select all of the above columns
@@ -35,7 +35,7 @@ def concat_domains(dir, year, round, print_header): #input arguments
 #step 2: running per year
 ##2020
 year = "2020"
-dir_20 = os.path.join(DIR + year + "/domain_tweets_csv")
+dir_20 = os.path.join(src + year + "/domain_tweets_csv")
 round = "initial"
 print_header = True
 concat_domains(dir_20, year, round, print_header)
@@ -44,27 +44,27 @@ concat_domains(dir_20, year, round, print_header)
 year = "2020"
 round = "missing"
 print_header = False
-dir_20_mis= os.path.join(DIR + year + "/domain_tweets_missing_csv")
+dir_20_mis= os.path.join(src + year + "/domain_tweets_missing_csv")
 concat_domains(dir_20_mis, year, round, print_header)
 
 ##2021
 year = "2021"
 round = "initial"
-dir_21 = os.path.join(DIR + year + "/domain_tweets_csv")
+dir_21 = os.path.join(src + year + "/domain_tweets_csv")
 print_header = False
 concat_domains(dir_21, year, round, print_header)
 
 ##2022
 year = "2022"
 round = "initial"
-dir_22 = os.path.join(DIR + year + "/domain_tweets_csv")
+dir_22 = os.path.join(src + year + "/domain_tweets_csv")
 print_header = False
 concat_domains(dir_22, year, round, print_header)
 
 ##missing
 year = "2022"
 round = "missing"
-dir_22_mis = os.path.join(DIR + year + "/domain_tweets_missing_csv")
+dir_22_mis = os.path.join(src + year + "/domain_tweets_missing_csv")
 print_header = False
 concat_domains(dir_22_mis, year, round, print_header)
 
