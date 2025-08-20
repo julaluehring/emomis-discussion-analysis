@@ -37,8 +37,8 @@ def read_data(data_dir, pattern):
         except Exception as e:
             print(f"Error processing file {file_path}: {e}")
     
-replies = read_data(src, "matched_replies.csv")
-first = read_data(src, "matched_replies_first.csv")
+replies = read_data(src, "matched_replies_mahalanobis.csv")
+first = read_data(src, "matched_replies_first_mahalanobis.csv")
 
 criteria = pd.read_csv(join(dst,"newsguard_criteria.csv"),
                        dtype=DTYPES)
