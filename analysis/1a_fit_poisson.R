@@ -14,8 +14,11 @@ set.seed(636)
 
 args <- commandArgs(trailingOnly = TRUE)
 src <- args[1]
-dst <- args[2]
+dst <- "./engagement/"
 
+if (!dir.exists(dst)) {
+  dir.create(dst, recursive = TRUE)
+}
 df <- read_csv(file.path(src, 
                 "matched_starters_mahalanobis.csv"),
                 col_types = cols())

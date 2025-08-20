@@ -15,8 +15,12 @@ pd.options.mode.chained_assignment = None
 
 N_ITER = 10000
 
-src = sys.argv[1] #"../data"
-dst = sys.argv[2] #"./newsguard"
+src = sys.argv[1] 
+dst = "./criteria/"
+
+if not Path(dst).exists():
+    Path(dst).mkdir(parents=True)
+
 with open(join(src, "dtypes_config.pickle"), "rb") as file:
     DTYPES = pkl.load(file)
 
@@ -40,7 +44,7 @@ def read_data(data_dir, pattern):
 replies = read_data(src, "matched_replies_mahalanobis.csv")
 first = read_data(src, "matched_replies_first_mahalanobis.csv")
 
-criteria = pd.read_csv(join(dst,"newsguard_criteria.csv"),
+criteria = pd.read_csv(join(src,"newsguard_criteria.csv"),
                        dtype=DTYPES)
 
 criteria = criteria[
@@ -189,7 +193,7 @@ for crit in CRITERIA:
                         DVS_REPLIES, 
                         IV,
                         COVARIATES, 
-                        join(dst,"./criteria_replies/replies_coeffs_{}.csv".format(IV)
+                        join(dst,"replies_coeffs_{}.csv".format(IV)
                              )
                         )
 
@@ -202,7 +206,7 @@ for crit in CRITERIA:
                         IV,
                         COVARIATES, 
                         join(dst,
-                        "./criteria_first/replies_first_coeffs_{}.csv".format(IV)
+                        "replies_first_coeffs_{}.csv".format(IV)
                             )
                         )
     

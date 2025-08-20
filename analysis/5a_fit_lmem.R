@@ -8,6 +8,9 @@ n_cores <- 25
 args <- commandArgs(trailingOnly = TRUE)
 src <- args[1]
 dst <- "./users/"
+if (!dir.exists(dst)) {
+  dir.create(dst, recursive = TRUE)
+}
 user_data <- read.csv(file.path(src, "same_author_replies.csv"))
 user_data$Bias <- abs(user_data$Orientation)
 

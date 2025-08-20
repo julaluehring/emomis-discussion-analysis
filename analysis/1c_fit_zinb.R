@@ -13,9 +13,13 @@ set.seed(636)
 # get the DV from command line argument
 args <- commandArgs(trailingOnly = TRUE)
 dv <- args[1]
-
 src <- args[2]
-dst <- "./zinb/"
+dst <- "./engagement/"
+
+if (!dir.exists(dst)) {
+  dir.create(dst, recursive = TRUE)
+}
+
 df <- read_csv(file.path(src, 
                 "matched_starters_mahalanobis.csv"),
                 col_types = cols()) %>%

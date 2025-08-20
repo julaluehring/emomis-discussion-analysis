@@ -15,8 +15,14 @@ pd.options.mode.chained_assignment = None
 
 N_ITER = 10000
 
-src = sys.argv[1] #"../data/"
-with open(join(src, "./dtypes_config.pickle"), "rb") as file:
+src = sys.argv[1] 
+dst = "./replies/"
+
+if not Path(dst).exists():
+    Path(dst).mkdir(parents=True)
+
+
+with open(join(src, "dtypes_config.pickle"), "rb") as file:
     DTYPES = pkl.load(file)
 
 def read_data(data_dir, pattern):
@@ -167,22 +173,22 @@ def residual_bootstrap(df, dvs, iv, covariates, n_iter, output_file):
 
 print("Computing full models for replies")
 fit_models(df_replies, DVS_REPLIES, IV, COVARIATES, 
-            "./replies/replies_coeffs.csv")
+           join(dst, "replies_coeffs.csv"))
 
 print("Computing full models for first replies")
 fit_models(df_first, DVS_FIRST, IV, COVARIATES_FIRST, 
-            "./replies_first/first_replies_coeffs.csv")
+              join(dst, "replies_first_coeffs.csv"))
 print("Residual Bootstrapping for replies")
 residual_bootstrap(df_replies, 
                       DVS_REPLIES, IV, COVARIATES, 
                       N_ITER, 
-                      "./replies/replies_res_boot.csv")
+                      join(dst, "replies_res_boot.csv"))
 
 print("Residual Bootstrapping for first")
 residual_bootstrap(df_first, 
                       DVS_FIRST, IV, COVARIATES_FIRST, 
                       N_ITER,
-                      "./replies_first/replies_first_res_boot.csv")
+                      join(dst, "replies_first_res_boot.csv"))
 
 
 print("Saved results.")

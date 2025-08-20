@@ -294,7 +294,7 @@ m.out_nearest_mahalanobis <- matchit(formula,
 
 #save matched data
 m.data_nearest_mahalanobis <- match.data(m.out_nearest_mahalanobis)
-MATCHED_PATH <- file.path(DIR_PATH, "matched_discussions_mahalanobis.csv")
+MATCHED_PATH <- file.path(DIR_PATH, "matched_replies_mahalanobis.csv")
 write.csv(m.data_nearest_mahalanobis, file = MATCHED_PATH)
 
 #save summary values after matching
@@ -328,7 +328,7 @@ m.out_nearest_glm <- matchit(formula,
 
 #save matched data
 m.data_nearest_glm <- match.data(m.out_nearest_glm)
-MATCHED_PATH <- file.path(DIR_PATH, "matched_discussions_glm.csv")
+MATCHED_PATH <- file.path(DIR_PATH, "matched_replies_glm.csv")
 write.csv(m.data_nearest_glm, file = MATCHED_PATH)
 
 #save summary values after matching

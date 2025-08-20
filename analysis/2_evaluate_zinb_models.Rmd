@@ -16,14 +16,13 @@ set.seed(636)
 options(scipen = 999)
 ```
 ```{r}
-setwd("emomis-discussion-analysis/analysis/")
 dst <- "./engagement/"
 ```
 
 
 ```{r}
-src <- "emomis-discussion-analysis/data/"
-df_regression <- read_csv(file.path(src, "matched_starters.csv")) 
+src <- "../data/"
+df_regression <- read_csv(file.path(src, "matched_starters_mahalanobis.csv")) 
 
 summary <- df_regression %>%
   group_by(Rating) %>%
@@ -80,10 +79,10 @@ summary
 
 ## Load negative binomial models with and without zero inflation
 ```{r}
-like_zinb <- readRDS("./engagement/zinb/like_count_zinb_model.rds")
-quote_zinb <- readRDS("./engagement/zinb/quote_count_zinb_model.rds")
-reply_zinb <- readRDS("./engagement/zinb/reply_count_zinb_model.rds")
-retweet_zinb <- readRDS("./engagement/zinb/retweet_count_zinb_model.rds")
+like_zinb <- readRDS("./engagement/like_count_zinb_model.rds")
+quote_zinb <- readRDS("./engagement/quote_count_zinb_model.rds")
+reply_zinb <- readRDS("./engagement/reply_count_zinb_model.rds")
+retweet_zinb <- readRDS("./engagement/retweet_count_zinb_model.rds")
 
 like_zinb_model <- like_zinb$model
 quote_zinb_model <- quote_zinb$model
@@ -92,10 +91,10 @@ retweet_zinb_model <- retweet_zinb$model
 ```
 
 ```{r}
-like_nb <- readRDS("./engagement/nb/like_count_nb_model.rds")
-quote_nb <- readRDS("./engagement/nb/quote_count_nb_model.rds")
-reply_nb <- readRDS("./engagement/nb/reply_count_nb_model.rds")
-retweet_nb <- readRDS("./engagement/nb/retweet_count_nb_model.rds")
+like_nb <- readRDS("./engagement/like_count_nb_model.rds")
+quote_nb <- readRDS("./engagement/quote_count_nb_model.rds")
+reply_nb <- readRDS("./engagement/reply_count_nb_model.rds")
+retweet_nb <- readRDS("./engagement/retweet_count_nb_model.rds")
 
 like_nb_model <- like_nb$model
 quote_nb_model <- quote_nb$model
@@ -105,10 +104,10 @@ retweet_nb_model <- retweet_nb$model
 
 ## Compare model fit
 ```{r}
-like_poisson <- read.csv("./engagement/poisson/like_count_pois_fit.csv")
-quote_poisson <- read.csv("./engagement/poisson/quote_count_pois_fit.csv")
-reply_poisson <- read.csv("./engagement/poisson/reply_count_pois_fit.csv")
-retweet_poisson <- read.csv("./engagement/poisson/retweet_count_pois_fit.csv")
+like_poisson <- read.csv("./engagement/like_count_pois_fit.csv")
+quote_poisson <- read.csv("./engagement/quote_count_pois_fit.csv")
+reply_poisson <- read.csv("./engagement/reply_count_pois_fit.csv")
+retweet_poisson <- read.csv("./engagement/retweet_count_pois_fit.csv")
 
 poisson_fit <- data.frame(
   DV = c("Likes", "Quotes", "Replies", "Retweets"),
@@ -152,7 +151,7 @@ nb_fit
 ```{r}
 create_zinb_table <- function(model, dv) {
   # load model summary csv
-  model_summary <- read.csv(paste0("./zinb/", dv, "_zinb_summary.csv"))
+  model_summary <- read.csv(paste0("./engagement/", dv, "_zinb_summary.csv"))
   
   # extract Zero for Rating term
   rating_zero <- model_summary %>%
@@ -221,7 +220,7 @@ zinb_table
 ```{r}
 create_nb_table <- function(dv) {
   # load model summary csv
-  model_summary <- read.csv(paste0("./nb/", dv, "_nb_summary.csv"))
+  model_summary <- read.csv(paste0("./engagement/", dv, "_nb_summary.csv"))
 
   # extract Zero for Rating term
   rating_row <- model_summary %>%
@@ -268,10 +267,10 @@ nb_table
 
 ## Run DHARMa model diagnostics
 ```{r}
-like_nb_dh <- readRDS("./engagement/nb/like_count_nb_dharma.rds")
-quote_nb_dh <- readRDS("./engagement/nb/quote_count_nb_dharma.rds")
-reply_nb_dh <- readRDS("./engagement/nb/reply_count_nb_dharma.rds")
-retweet_nb_dh <- readRDS("./engagement/nb/retweet_count_nb_dharma.rds")
+like_nb_dh <- readRDS("./engagement/like_count_nb_dharma.rds")
+quote_nb_dh <- readRDS("./engagement/quote_count_nb_dharma.rds")
+reply_nb_dh <- readRDS("./engagement/reply_count_nb_dharma.rds")
+retweet_nb_dh <- readRDS("./engagement/retweet_count_nb_dharma.rds")
 ```
 
 ```{r}
@@ -341,10 +340,10 @@ par(mfrow = c(1, 1))
 
 
 ```{r}
-like_zinb_dh <- readRDS("./engagement/zinb/like_count_zinb_dharma.rds")
-quote_zinb_dh <- readRDS("./engagement/zinb/quote_count_zinb_dharma.rds")
-reply_zinb_dh <- readRDS("./engagement/zinb/reply_count_zinb_dharma.rds")
-retweet_zinb_dh <- readRDS("./engagement/zinb/retweet_count_zinb_dharma.rds")
+like_zinb_dh <- readRDS("./engagement/like_count_zinb_dharma.rds")
+quote_zinb_dh <- readRDS("./engagement/quote_count_zinb_dharma.rds")
+reply_zinb_dh <- readRDS("./engagement/reply_count_zinb_dharma.rds")
+retweet_zinb_dh <- readRDS("./engagement/retweet_count_zinb_dharma.rds")
 
 dharma_zinb <- list(
   like_zinb = like_zinb_dh,

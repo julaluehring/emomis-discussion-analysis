@@ -7,6 +7,11 @@ set.seed(636)
 args <- commandArgs(trailingOnly = TRUE)
 dv <- args[1]
 src <- args[2]
+dst <- "./engagement"
+
+if (!dir.exists(dst)) {
+  dir.create(dst, recursive = TRUE)
+}
 
 cat("Loading model data for", dv, "...\n")
 
@@ -59,8 +64,8 @@ summary_df <- data.frame(
 )
 
 # concenate the summaries
-boot_file <- file.path("./engagement/", paste0(dv, "_means_boot.csv"))
-summary_file <- file.path("./engagement/", paste0(dv, "_means_summary.csv"))
+boot_file <- file.path(dst, paste0(dv, "_means_boot.csv"))
+summary_file <- file.path(dst, paste0(dv, "_means_summary.csv"))
 
 write.csv(bootstrap_results, boot_file, row.names = FALSE)
 write.csv(summary_df, summary_file, row.names = FALSE)
