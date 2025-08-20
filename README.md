@@ -18,53 +18,51 @@ There are two major restrictions to publishing all data and scripts required to 
 2. NewsGuard scores: The NewsGuard database is proprietary, which is why we cannot publish NewsGuard domain labels or domain names. Since we collected our data based on the list of domains, the data collection cannot be reproduced without acquiring the NewsGuard database either.
 
 ## Data collection
-We used the list of NewsGuard-rated domains to estimate the tweet volume with ``get_domain_counts.sh``, after which we downloaded all tweets mentioning any of the domains within the given time frame (but excluding retweets) in ``get_domain_counts.sh``. Using twarc, we converted the json-files into csv (see ``convert_domain_tweets_to_csv.sh`` and randomly selected conversation IDs from the domain tweets. IN a last step, we re-hydrated the full conversations with ``get_conversations.sh``. 
+We used the list of NewsGuard-rated domains to estimate the tweet volume with ``1_get_domain_counts.sh``, after which we downloaded all tweets mentioning any of the domains within the given time frame (but excluding retweets) in ``2_get_domain_counts.sh``. Using twarc, we converted the json-files into csv (see ``3_convert_json_to_csv.sh`` and randomly selected conversation IDs from the domain tweets. In a last step, we re-hydrated the full conversations with ``4_get_conversations.sh``. 
 
 ## Data wrangling
-We created the merged dataset with ``concat_domains.py``, ``concat_conversations.py`` and ``merge_domains_with_convos.py``. In order to add the domain rating to the data, we created a superset of NewsGuard ratings for all relevant domains with timestamps. We then add the ratings to the dataset dynamically (based on the domain name and the date) with ``add_domain_ratings.py``. Lastly, we drop duplicates ``drop_duplicates.py``. 
+We created the merged dataset with ``1_concat_domains.py``, ``4_concat_conversations.py`` and ``5_merge_domains_with_convos.py``. In order to add the domain rating to the data, we created a superset of NewsGuard ratings for all relevant domains with timestamps (in ``2_create_newsguard_time_series``). We then add the ratings to the dataset dynamically (based on the domain name and the date) with ``3_add_domain_ratings.py``. Lastly, we drop duplicates ``6_drop_duplicates.py``.
 
-We also created a pickle-file to save and load the data types when loading the data that we re-use in subsequent scripts (``config_dtypes.ipynb``). The pickle-file is stored with the data. 
+We also created a pickle-file to save and load the data types when loading the data that we re-use in subsequent scripts (``7_config_dtypes.ipynb``). The pickle-file is stored with the data. 
 
 ## Inference
-Here, we save all files for the emotion classification. First, we cleaned the text with ``prepare_text.py`` so that we can apply the ELECTRA-based classifier in ``infer_emotion.py`` (and merged back with the dataframe in ``merge_inference.py`` and adding additional variables in ``add_engagement_metrics.py``).
+Here, we save all files for the emotion classification. First, we cleaned the text with ``1_prepare_text.py`` so that we can apply the ELECTRA-based classifier in ``2_infer_emotion.py`` (and merge it back with the dataframe in ``3_merge_inference.py`` as well as adding additional variables in ``4_add_engagement_metrics.py``).
 
-For the validation, we calculate the percentage agreement in ``shuffle_percentage_agreement.py``, compute F1s in ``bootstrap_f1.R``and plot the area under the curve in ``plot_ruc.ipynb``. 
+For the validation data (merged in ``5_merge_validation_data.py``), we calculate the percentage agreement in ``6_shuffle_percentage_agreement.py`` and plot the area under the curve in ``7_plot_ruc.ipynb``. 
 
 ## Non-parametric matching
 If you want to reproduce the matching, use the dataset "german_tweets_anonymized.csv.gz" and repeat the following steps:
-First, subset only the discussions, i.e., the tweets that have received replies from our dataset (``subset_discussions.ipynb``). Then, aggregate emotions and a list of covariates per discussion (``aggregate_starters.ipynb``) and news tweets (``aggregate_starters.ipynb``) separately. Now, we have the separate input datasets and scripts for the matching: 
+First, subset only the discussions, i.e., the tweets that have received replies from our dataset (``1_subset_discussions.ipynb``). Then, aggregate emotions and a list of covariates per discussion (``2_aggregate_replies.ipynb``) and news tweets (``3_aggregate_starters.ipynb``) separately. Now, we have the separate input datasets and scripts for the matching: 
 
-* ``match_starters.R``:
-      * input: "discussions_starters_aggregates.csv"
-      * output: "matched_starters_mahalanobis.csv"
-* ``match_discussions.R``:
+* ``4_match_replies.R``:
       * input: "discussions_replies_aggregates.csv"
-      * ouput: "matched_discussions_mahalanobis.csv"
-* ``match_first:replies.R``:
+      * ouput: "matched_discussions_mahalanobis.csv" & "matched_discussions_glm.csv"
+* ``5_match_replies_first.R``:
       * input: "first_replies_aggregates.csv"
-      * output: "matched_replies_first_mahalanobis.csv"
+      * output: "matched_replies_first_mahalanobis.csv" & "matched_replies_first_glm.csv"
 
-To evaluate the matching and plot: ``eval_matching.ipynb``.
+* ``6_match_starters.R``:
+      * input: "discussions_starters_aggregates.csv"
+      * output: "matched_starters_mahalanobis.csv" & "matched_starters_glm.csv"
+
+To evaluate the matching and plot: ``7_eval_matching.ipynb``.
 
 ## Statistical analysis
 The statistical analyses can be reproduced using the following dataset files: 
-1. To run the regression models for the effects on emotions ``boot_discussions.py`` and to evaluate the results ``test_discussions.ipynb``
-2. To test within-user differences: ``test_same_users.ipynb``
-3. To run the zero-inflated negative binomial models to test the effects on engagement ``test_engagement_zinb.R`` 
-4. For several robustness checks: ``explore_users.ipynb``, ``test_components.py``, ``visualize_components.ipynb``, ``test_newsguard_thresholds.ipynb``, ``boot_covariates.py``, ``test_covariates.ipynb``
+1. To test the effects on engagement and try the different Generalized Linear Models (``1a_fit_poisson.R``, ``1b_fit_nb.R`` and ``1c_fit_zinb.R``) and evaluate the models in ``2_evaluate_zinb_models.Rmd``, and bootstrap the conditional means (``3_boot_means.R``). 
+2. To run the regression models for the effects on emotions (``4a_boot_discussions.py``), evaluate the results (``4b_test_discussions.ipynb``), test (``4c_test_components.py``) and visualize components (``4d_visualize_components.ipynb``), and test different NewsGuard thresholds (``4e_test_newsguard_thresholds.ipynb``). 
+3. To test within-user differences (``5a_fit_lmem.R``) and describe user groups in our sample (``5b_describe_users.ipynb``)
 
 
 ## Scripts to reproduce figures from the article: 
 
-* Figure 1 & Figure 2: plot_main_figures.ipynb
+* Fig. 1 (Panel b&c), Fig. 2 and Fig. 3: ``0_plot_main_figures.ipynb``
 * Fig. S1: ``test_newsguard_thresholds.ipynb``
 * Fig. S2: ``shuffle_percentage_agreement.py``
 * Fig. S3: ``plot_ruc.ipynb``
-* Fig. S4 & S5: ``test_covariates.ipynb``
-* Fig. S6: ``eval_matching.ipynb``
+* Fig. S4: ``eval_matching.ipynb``
+* Fig. S5 & S6: ``evaluate_zinb_models.Rmd``
 * Fig. S7 & S8: ``test_discussions.ipynb``
-* Fig. S9: ``test_same_users.ipynb``
-* Fig. S10: ``test_engagement_zinb.R``
-* Fig. S11 & S12: ``explore_users.ipynb``
-* Fig. S13: ``visualize_components.ipynb``
+* Fig. S9, S10 & S11: ``describe_users.ipynb``
+* Fig. S11: ``visualize_components.ipynb``
 
