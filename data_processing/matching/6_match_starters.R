@@ -1,5 +1,3 @@
-# STEP 4: MATCH THE TWEETS MENTIONING A DOMAIN.
-
 library("MatchIt")
 library(readr)
 library(arrow)
@@ -357,4 +355,5 @@ dev.off()
 svg(file = file.path(dst, "starters_glm_plot.svg"),
       width = 8, height = 6)
 plot(summary_table)
+
 dev.off()
