@@ -11,7 +11,7 @@ src <- args[2]
 cat("Loading model data for", dv, "...\n")
 
 df <- read_csv(file.path(src, 
-                "matched_starters.csv"),
+                "matched_starters_mahalanobis.csv"),
                 col_select = c("Rating", all_of(dv)),
                 col_types = cols(
                   Rating = col_factor(levels = c("0", "1")),
