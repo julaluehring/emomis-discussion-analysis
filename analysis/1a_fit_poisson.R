@@ -17,7 +17,7 @@ src <- args[1]
 dst <- args[2]
 
 df <- read_csv(file.path(src, 
-                "matched_starters.csv"),
+                "matched_starters_mahalanobis.csv"),
                 col_types = cols())
 
 iv <- c("Rating")
