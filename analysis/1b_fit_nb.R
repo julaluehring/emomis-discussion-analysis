@@ -16,7 +16,7 @@ dv <- args[1]
 src <- args[2]
 dst <- "./nb/"
 df <- read_csv(file.path(src, 
-                "matched_starters.csv"),
+                "matched_starters_mahalanobis.csv"),
                 col_types = cols()) %>%
       suppressMessages()
 
