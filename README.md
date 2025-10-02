@@ -51,9 +51,7 @@ To evaluate the matching and plot: ``6_eval_matching.ipynb``.
 
 ## Statistical analysis
 The statistical analyses can be reproduced using the following scripts: 
-1. To test the effects on engagement and try the different Generalized Linear Models (``1a_fit_poisson.R``, ``1b_fit_nb.R`` and ``1c_fit_zinb.R``) and evaluate the models in ``2_evaluate_zinb_models.Rmd``, and bootstrap the conditional means (``3_boot_means.R``). 
-2. To run the regression models for the effects on emotions (``4a_boot_discussions.py``), evaluate the results (``4b_test_discussions.ipynb``), test (``4c_test_components.py``) and visualize components (``4d_visualize_components.ipynb``), and test different NewsGuard thresholds (``4e_test_newsguard_thresholds.ipynb``). 
-3. To test within-user differences (``5a_fit_lmem.R``) and describe user groups in our sample (``5b_describe_users.ipynb``)
+To test the effects on engagement and try the different Generalized Linear Models (``1a_fit_poisson.R``, ``1b_fit_nb.R`` and ``1c_fit_zinb.R``) and evaluate the models in ``2_evaluate_zinb_models.Rmd``, and bootstrap the conditional means (``3_boot_means.R``). To run the regression models for the effects on emotions (``4a_boot_discussions.py``), evaluate the results (``4b_test_discussions.ipynb``), test (``4c_test_components.py``) and visualize components (``4d_visualize_components.ipynb``), and test different NewsGuard thresholds (``4e_test_newsguard_thresholds.ipynb``). To test within-user differences (``5a_fit_lmem.R``) and describe user groups in our sample (``5b_describe_users.ipynb``)
 
 
 ## Scripts to reproduce figures from the article: 
@@ -63,8 +61,9 @@ The statistical analyses can be reproduced using the following scripts:
 * Fig. S2: ``shuffle_percentage_agreement.py``
 * Fig. S3: ``plot_ruc.ipynb``
 * Fig. S4: ``eval_matching.ipynb``
-* Fig. S5 & S6: ``evaluate_zinb_models.Rmd``
-* Fig. S7 & S8: ``test_discussions.ipynb``
-* Fig. S9, S10 & S11: ``describe_users.ipynb``
-* Fig. S11: ``visualize_components.ipynb``
+* Fig. S5: ``plot_cdf.ipynb``
+* Fig. S6 & S7: ``evaluate_zinb_models.Rmd``
+* Fig. S8 & S9: ``test_discussions.ipynb``
+* Fig. S10-S13: ``describe_users.ipynb``
+* Fig. S14: ``visualize_components.ipynb``
 
