@@ -8,11 +8,13 @@ require(DHARMa)
 require(pscl) # zeroinfl()
 require(car)
 require(VGAM)
+require(marginaleffects)
 set.seed(636)
 
 # get the DV from command line argument
 args <- commandArgs(trailingOnly = TRUE)
 dv <- args[1]
+
 src <- args[2]
 dst <- "./engagement/"
 
@@ -97,9 +99,9 @@ for (cov in covariates) {
                               dist = "negbin",
                               na.action = na.omit,
                               control = zeroinfl.control(
-                                method = "Nelder-Mead",
+                                method = "L-BFGS-B", # box-constrained optimization
                                 maxit = 10000, # increase max iterations
-                                tol = 1e-8)) # set tolerance for convergence
+                                reltol = 1e-8)) # set tolerance for convergence
   
     if (is.null(zeroinfl_model$converged) || !zeroinfl_model$converged) {
       warning("Model failed to converge for predictors: ", paste(proposed_predictors, collapse = ", "))
@@ -266,7 +268,6 @@ sim_res_zinb <- createDHARMa(
                   integerResponse = TRUE) # integer response necessary for count data
 
 saveRDS(sim_res_zinb, file = file.path(dst, paste0(dv, "_zinb_dharma.rds")))
-
 
 end_time <- Sys.time()
 elapsed_time <- as.numeric(difftime(end_time, start_time, units = "mins"))

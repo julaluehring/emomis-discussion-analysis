@@ -1,21 +1,22 @@
 ```{r}
 rm(list = ls())
 
-require(dplyr)
-require(kableExtra)
-require(stringr)
-require(MASS)
-require(pscl)
-require(kableExtra)
-require(DHARMa)
-require(cowplot)
-require(car)
-require(tidyverse)
+library(dplyr)
+library(kableExtra)
+library(stringr)
+library(MASS)
+library(pscl)
+library(kableExtra)
+library(DHARMa)
+library(cowplot)
+library(car)
+library(marginaleffects)
 
 set.seed(636)
 options(scipen = 999)
 ```
 ```{r}
+setwd("/home/luehring/german-newsguard-emotions/analysis/engagement")
 dst <- "./engagement/"
 ```
 
@@ -149,9 +150,9 @@ nb_fit
 
 ## Create model summary tables
 ```{r}
-create_zinb_table <- function(model, dv) {
+create_zinb_table <- function(model, path, dv) {
   # load model summary csv
-  model_summary <- read.csv(paste0("./engagement/", dv, "_zinb_summary.csv"))
+  model_summary <- read.csv(paste0(path, dv, "_zinb_summary.csv"))
   
   # extract Zero for Rating term
   rating_zero <- model_summary %>%
@@ -195,10 +196,10 @@ create_zinb_table <- function(model, dv) {
   return(combined_row)
 }
 
-like_zinb_table <- create_zinb_table(like_zinb, "like_count")
-quote_zinb_table <- create_zinb_table(quote_zinb, "quote_count")
-reply_zinb_table <- create_zinb_table(reply_zinb, "reply_count")
-retweet_zinb_table <- create_zinb_table(retweet_zinb, "retweet_count")
+like_zinb_table <- create_zinb_table(like_zinb, "engagement/", "like_count")
+quote_zinb_table <- create_zinb_table(quote_zinb, "engagement/", "quote_count")
+reply_zinb_table <- create_zinb_table(reply_zinb, "engagement/", "reply_count")
+retweet_zinb_table <- create_zinb_table(retweet_zinb, "engagement/", "retweet_count")
 
 zinb_table <- bind_rows(
   like_zinb_table,
@@ -444,5 +445,86 @@ for (i in seq_along(dvs)) {
 par(mfrow = c(1, 1))
 
 dev.off()
+```
+
+### Marginal effects
+
+
+```{r}
+like_means <- read.csv("./engagement/like_count_mfx.csv")
+quote_means <- read.csv("./engagement/quote_count_mfx.csv")
+reply_means <- read.csv("./engagement/reply_count_mfx.csv")
+retweet_means <- read.csv("./engagement/retweet_count_mfx.csv")
+
+# concacenate
+means_df <- rbind(like_means, quote_means,
+                  reply_means, retweet_means)
+
+write.csv(means_df, "avg_predictions_mfx.csv", row.names = FALSE)
+means_df
+```
+
+
+```{r}
+predict_mfx <- function(model, DV) {
+  mfx <- avg_comparisons(model,
+                            variables = "Rating")
+
+  effects_df <- as.data.frame(mfx)
+  effects_df$DV <- DV
+  effects_df <- effects_df %>%
+      rename(
+        Estimate = estimate,
+        SE = std.error,
+        z = statistic,
+        p = p.value,
+        CI_Lower = conf.low,
+        CI_Upper = conf.high)%>%
+      dplyr::select(
+        DV, Estimate, SE, 
+        z, p, CI_Lower, CI_Upper)
+
+  return(effects_df)
+}
+
+like_fx <- predict_mfx(like_zinb_model, "Likes")
+quote_fx <- predict_mfx(quote_zinb_model, "Quotes")
+reply_fx <- predict_mfx(reply_zinb_model, "Replies")
+retweet_fx <- predict_mfx(retweet_zinb_model, "Retweets")
+
+fx_df <- rbind(like_fx, quote_fx , 
+            reply_fx, retweet_fx)
+fx_df
+```
+
+```{r}
+mfx_df <- means_df %>%
+  filter(Rating == 0)%>%
+  dplyr:::select(DV, Predicted)%>%
+  merge(fx_df, by="DV")%>%
+  mutate(
+      `95%CI` = paste0(round(CI_Lower, 3), ", ", round(CI_Upper, 3))) %>%
+  dplyr::select(-CI_Lower, -CI_Upper) %>%
+  mutate(PC = ((Estimate / Predicted) * 100))%>%
+  dplyr::select(DV, Estimate, SE, z, p, `95%CI`, PC)
+
+mfx_df
+```
+
+```{r}
+# write a latex table with kable
+mfx_df %>%
+  #recode the DV variable
+  mutate(DV = recode(DV, 
+                     "Likes" = "Like",
+                     "Quotes" = "Quote",
+                     "Replies" = "Reply",
+                     "Retweets" = "Retweet")) %>%
+  kable("latex", 
+        booktabs = TRUE,
+        digits = 3,
+        linesep = "",
+        align = c("l", rep("r", 7))) %>%
+  save_kable(file.path(dst, "mfx_table.tex"))
 ```
 

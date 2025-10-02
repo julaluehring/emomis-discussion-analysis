@@ -1,0 +1,164 @@
+```{r}
+rm(list = ls())
+
+library(lme4)
+library(lmerTest) 
+library(stringr)
+library(kableExtra)
+library(dplyr)
+options(scipen = 999)
+```
+
+```{r}
+src <- "../data/"
+df <- read.csv(file.path(src, "same_author_replies.csv"))
+
+dvs <- c("anger_first", "disgust_first", "fear_first", "sadness_first",
+         "joy_first", "hope_first", "pride_first")
+emotion_means <- df %>%
+  group_by(Rating) %>%
+  summarise(across(dvs, mean, na.rm = TRUE))
+emotion_means
+```
+
+```{r}
+anger_model <- readRDS("./users/anger_first_lmem.rds")
+summary(anger_model)
+```
+
+```{r}
+dvs <- c("anger_first", "disgust_first", "fear_first", "sadness_first",
+         "joy_first", "hope_first", "pride_first")
+rating_coeffs <- data.frame()
+
+for (dv in dvs) {
+  model <- readRDS(paste0("./users/", dv, "_lmem.rds"))
+  est <- summary(model)$coefficients["Rating", "Estimate"]
+  se <- summary(model)$coefficients["Rating", "Std. Error"]
+  t_value <- summary(model)$coefficients["Rating", "t value"]
+  p_value <- summary(model)$coefficients["Rating", "Pr(>|t|)"]
+
+  boot <- read.csv(paste0("./users/", 
+                          dv, 
+                          "_bootstraps.csv"))
+  mean <- mean(boot$Rating)
+  pUL <- as.numeric(quantile(boot$Rating, 0.975))
+  pLL <- as.numeric(quantile(boot$Rating, 0.025))
+
+  dv <- sub("_first$", "", dv)
+  rating_coeffs <- rbind(rating_coeffs, data.frame(
+    DV = str_to_title(gsub("_first", "", dv)),
+    Estimate = est,
+    SE = se,
+    t = t_value,
+    p = p_value,
+    pLL = pLL,
+    pUL = pUL,
+    stringsAsFactors = FALSE
+    ))
+}
+
+rating_coeffs
+```
+
+```{r}
+#save as csv
+write.csv(rating_coeffs, "./users/rating_coeffs.csv", row.names = FALSE)
+```
+```{r}
+extract_sig_coeffs <- function(model, dv) {
+  sig_coeffs <- summary(model)$coefficients[summary(model)$coefficients[, "Pr(>|t|)"] < 0.05, ]
+
+  sig_coeffs <- sig_coeffs[rownames(sig_coeffs) != "(Intercept)", ]
+
+  boot <- read.csv(paste0("./users/", dv, "_bootstraps.csv"))
+  pUL <- sapply(rownames(sig_coeffs), function(iv) as.numeric(quantile(boot[[iv]], 0.975)))
+  pLL <- sapply(rownames(sig_coeffs), function(iv) as.numeric(quantile(boot[[iv]], 0.025)))
+
+  sig_coeffs_df <- data.frame(
+    DV = str_to_title(gsub("_first", "", dv)),
+    IV = rownames(sig_coeffs),
+    Estimate = sig_coeffs[, "Estimate"],
+    SE = sig_coeffs[, "Std. Error"],
+    t = sig_coeffs[, "t value"],
+    p = sig_coeffs[, "Pr(>|t|)"],
+    pLL = pLL,
+    pUL = pUL
+  )
+  rownames(sig_coeffs_df) <- NULL
+  return(sig_coeffs_df)
+}
+
+all_sig_coeffs <- data.frame()
+for (dv in dvs) {
+  model <- readRDS(paste0("./users/", dv, "_lmem.rds"))
+  sig_coeffs <- extract_sig_coeffs(model, dv)
+
+  #bind together all significant coefficients
+  all_sig_coeffs <- rbind(all_sig_coeffs, sig_coeffs)
+}
+
+all_sig_coeffs
+```
+
+```{r}
+#save as csv
+write.csv(all_sig_coeffs, "./users/all_sig_coeffs.csv", row.names = FALSE)
+```
+
+```{r}
+#extract all coefficients 
+extract_all_coeffs <- function(model, dv) {
+  all_coeffs <- summary(model)$coefficients
+
+  boot <- read.csv(paste0("./users/", dv, "_bootstraps.csv"))
+  pUL <- sapply(rownames(all_coeffs), function(iv) as.numeric(quantile(boot[[iv]], 0.975)))
+  pLL <- sapply(rownames(all_coeffs), function(iv) as.numeric(quantile(boot[[iv]], 0.025)))
+
+  all_coeffs_df <- data.frame(
+    DV = str_to_title(gsub("_first", "", dv)),
+    IV = rownames(all_coeffs),
+    Estimate = all_coeffs[, "Estimate"],
+    SE = all_coeffs[, "Std. Error"],
+    t = all_coeffs[, "t value"],
+    p = all_coeffs[, "Pr(>|t|)"],
+    pLL = pLL,
+    pUL = pUL
+  )
+  rownames(all_coeffs_df) <- NULL
+  return(all_coeffs_df)
+}
+
+all_coeffs <- data.frame()
+for (dv in dvs) {
+  model <- readRDS(paste0("./users/", dv, "_lmem.rds"))
+  coeffs <- extract_all_coeffs(model, dv)
+  coeffs <- coeffs %>%
+    dplyr::mutate(`95%CI` = paste0(round(pLL, 3), ", ", round(pUL, 3)))
+
+  # drop pUL and PLL and DV
+  coeffs <- coeffs[, c("IV", "Estimate", "SE", "t", "p", "95%CI")]
+
+  # remove _log from IV names
+  coeffs$IV <- gsub("author.", "", coeffs$IV)
+  coeffs$IV <- str_to_title(coeffs$IV)
+  coeffs$IV <- gsub("_log", " (log)", coeffs$IV)
+  coeffs$IV <- gsub("_first", " user", coeffs$IV)
+  coeffs$IV <- gsub("_", " ", coeffs$IV)
+  rownames(coeffs) <- NULL
+
+  coeffs %>%
+    kable("latex", 
+          booktabs = TRUE,
+          digits = 3,
+          row.names = FALSE,
+          linesep = "",
+          align = c("l", rep("r", 7))) %>%
+    save_kable(paste0("users/", dv, "_lmem.tex"))
+
+
+  all_coeffs <- rbind(all_coeffs, coeffs)
+}
+
+all_coeffs
+```
