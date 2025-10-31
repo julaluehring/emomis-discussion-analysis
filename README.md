@@ -1,6 +1,7 @@
 # Quantifying the Causal Effects of Misinformation on Engagenemt and Emotions on Social Media
 
-Public repository for the data collection and analysis code reproduce the statistical analysis. After downloading this repository, place the data folder into the main directory of this repository (i.e. on the same level as the ``analysis`` folder).
+Public repository for the data collection and analysis code reproduce the statistical analysis. After downloading this repository, place the data folder into the main directory of this repository (i.e. on the same level as the ``analysis`` folder). 
+We also provide an ``environment.yml``, with which you can re-create our conda environment and install all dependencies via the terminal (``conda env create -f environment.yml``).
 
 ## Reproduction of analysis
 The repository is organized into two sections: ``data_processing`` and ``analysis``. 
@@ -52,7 +53,7 @@ To evaluate the matching and plot: ``4_eval_matching.ipynb``.
 
 ## Statistical analysis
 The statistical analyses can be reproduced using the following scripts: 
-To test the effects on engagement and try the different Generalized Linear Models (``1a_fit_poisson.R``, ``1b_fit_nb.R`` and ``1c_fit_zinb.R``) and evaluate the models in ``2a_evaluate_zinb.Rmd`` and ``2b_plot_cdf.ipynb``, as well as bootstrap the marginal effects (``3_boot_marginal_effects.R``). 
+To test the effects on engagement and try the different Generalized Linear Models (``1a_fit_poisson.R``, ``1b_fit_nb.R`` and ``1c_fit_zinb.R``), bootstrap the marginal effects (``2_boot_marginal_effects.R``), and evaluate the models in ``3a_evaluate_zinb.Rmd`` and ``3b_plot_cdf.ipynb``.
 
 To run the regression models for the effects on emotions (``4a_boot_discussions.py``), evaluate the results (``4b_test_discussions.ipynb``), test (``4c_test_components.py``) and visualize components (``4d_visualize_components.ipynb``), and test different NewsGuard thresholds (``4e_test_newsguard_thresholds.ipynb``). To test within-user differences (``5a_fit_lmem.R``, ``5b_evaluate_lmem.Rmd``) and describe user groups in our sample (``6_describe_users.ipynb``)
 
