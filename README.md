@@ -30,11 +30,13 @@ First, we cleaned the text with ``1_prepare_text.py`` so that we can apply the E
 
 For the validation data (merged in ``5_merge_validation_data.py``), we calculated the percentage agreement in ``6_shuffle_percentage_agreement.py`` and plotted the area under the curve in ``7_plot_ruc.ipynb``. 
 
+
 ## Non-parametric matching
 We subsetted only the discussions, i.e., the tweets that have received replies from our dataset (``1_subset_discussions.ipynb``). 
-Then, we aggregated the datasets in ``2a_aggregate_replies.ipynb`` and ``2b_aggregate_starters.ipynb``.
 
-**If you want to reproduce the matching & analysis, you can start here with the aggregated datasets for the a) replies and first replies in the discussions.** 
+**If you want to reproduce the matching & analysis, you can start here with aggregating datasets for the a) replies and first replies in the discussions.** 
+
+Then, we aggregated the datasets in ``2a_aggregate_replies.ipynb`` and ``2b_aggregate_starters.ipynb``.
 
 Now, we have the separate input datasets and scripts for the matching: 
 
