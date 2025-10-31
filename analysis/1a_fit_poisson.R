@@ -39,10 +39,10 @@ covariates <- c(
   "author.tweet_count_log"
 )
 # rename Orientation column in DF to Bias
-names(DF)[names(DF) == "Orientation"] <- "Bias"
+names(df)[names(df) == "Orientation"] <- "Bias"
 
 # select data and drop missing values
-df_regression <- na.omit(DF[, c(iv, dvs, covariates)])
+df_regression <- na.omit(df[, c(iv, dvs, covariates)])
 
 # loop through dvs and fit models
 for (dv in dvs) {
@@ -127,17 +127,11 @@ for (dv in dvs) {
     # save model summary
     zero_model_summary <- summary(zeroinfl_model)
 
-    # # compute 95% confidence intervals
-    # confint_count <- confint(zero_model_summary$count)
-    # confint_zero <- confint(zero_model_summary$zero)
-
     # extract count model
     count_summary <- zero_model_summary$coefficients$count
     count_df <- as.data.frame(count_summary)
     count_df$component <- "count"  
     count_df$term <- rownames(count_df)
-    # count_df$LCI <- confint_count[, 1]
-    # count_df$UCI <- confint_count[, 2]
 
     # extract zero-inflated model
     zero_summary <- zero_model_summary$coefficients$zero
@@ -175,44 +169,6 @@ for (dv in dvs) {
     write.csv(zeroinfl_fit, 
               file.path(paste0(dst, dv, "_pois_zero_fit.csv")),
               row.names = FALSE)
-
-    # # bootstrap / simulate residuals (https://aosmith.rbind.io/2017/12/21/using-dharma-for-residual-checks-of-unsupported-models/#simulations-for-models-without-a-simulate-function)
-
-    # # extract counts and mus
-    # p <- predict(zeroinfl_model, type = "zero") # probabilities of zero
-    # mus <- predict(zeroinfl_model, type = "count") # expected counts
-
-    # simulate_zip <- function(n, pstr0, lambda) {
-    #   structural_zeros <- rbinom(n, size = 1, prob = pstr0)
-    #   poisson_counts <- rpois(n, lambda = lambda)
-    #   simulated_data <- ifelse(structural_zeros == 1, 0, poisson_counts)
-    #   return(simulated_data)
-    # }
-
-    # # simulate datasets
-    # sim_response <- replicate(250, simulate_zip(n = nrow(df_regression), 
-    #                                             pstr0 = p, 
-    #                                             lambda = mus))
-
-    # print(sim_response)
-
-    # # create DHARMa object
-    # sim_res_zip <- createDHARMa(
-    #     simulatedResponse = sim_response,
-    #     observedResponse = df_regression[[dv]],
-    #     fittedPredictedResponse = predict(zeroinfl_model, type = "response"),
-    #     integerResponse = TRUE)
-
-
-    # # save qqplot as pdf
-    # pdf(file.path(paste0(dst, dv, "_pois_zero_qq.pdf")), width=4.5, height=4.5)
-    # plotQQunif(sim_res_zip, testDispersion = FALSE, testUniformity = FALSE, testOutliers = FALSE)
-    # plot(sim_res_zinb)
-    # dev.off()
-
-    # pdf(file.path(paste0(dst, dv, "_pois_zero_fit_hist.pdf")), width=4.5, height=4.5)
-    # hist(sim_res_zip)
-    # dev.off()
   }
 
   end_time <- Sys.time()

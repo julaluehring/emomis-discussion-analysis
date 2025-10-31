@@ -2,6 +2,10 @@
 data/
 data.zip
 anonymize_data.ipynb
+analysis/criteria/
+analysis/engagement/
+analysis/replies/
+analysis/users/
 
 # Mac files
 *.DS_Store

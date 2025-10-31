@@ -11,6 +11,7 @@ options(scipen = 999)
 
 ```{r}
 src <- "../data/"
+tables <- "../tables/"
 df <- read.csv(file.path(src, "same_author_replies.csv"))
 
 dvs <- c("anger_first", "disgust_first", "fear_first", "sadness_first",
@@ -154,7 +155,7 @@ for (dv in dvs) {
           row.names = FALSE,
           linesep = "",
           align = c("l", rep("r", 7))) %>%
-    save_kable(paste0("users/", dv, "_lmem.tex"))
+    save_kable(paste0(tables, dv, "_lmem.tex"))
 
 
   all_coeffs <- rbind(all_coeffs, coeffs)

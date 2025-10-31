@@ -135,6 +135,3 @@ for (dv in dvs) {
   cat("Results saved for", dv, "\n\n")
 
 }
-
-
-

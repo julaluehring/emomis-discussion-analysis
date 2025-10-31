@@ -4,7 +4,7 @@ library(pscl)
 library(future.apply)
 args <- commandArgs(trailingOnly = TRUE)
 
-plan("multicore", workers = 10) # this works with marginaleffects
+plan("multicore", workers = 20) # this works with marginaleffects
 options(marginaleffects_parallel_inferences = TRUE)
 options(marginaleffects_parallel_packages = c("pscl", "MASS"))
 
@@ -35,9 +35,9 @@ start_time <- Sys.time()
 
 # bootstrap confidence intervals for predicted counts
 boot <- inferences(mfx, 
-                    method = "simulation", # draws from the covariance matrix
+                    method = "boot", # draws from the covariance matrix
                     R = n_boot, 
-                    verbose=TRUE # show progress
+                    #verbose=TRUE # show progress
                     ) 
 
 #save results

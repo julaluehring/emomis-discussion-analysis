@@ -1,3 +1,4 @@
+# THIS IS NOT REPRODUCIBLE DUE TO THE DATA RESTRICTIONS!
 import pandas as pd
 from pathlib import Path
 import pickle as pkl
@@ -60,7 +61,7 @@ def merge_criteria(df, criteria):
     criteria = criteria[criteria.month <= max_date]
     dis_crit = pd.merge(df,
                     criteria, 
-                  left_on=["Domain", "month", "Score"], 
+                  left_on=["Domain", "month", "Score"], # this cannot be done
                   right_on=["Domain", "month", "Score"], 
                   how="left")
     return dis_crit
@@ -144,48 +145,6 @@ def compute_full_models(df, dvs, iv, covariates, coeff_path):
     #save as csv
     coefficients_df.to_csv(coeff_path, index=False)
     
-
-
-#define function to bootstrap OLS
-# def bootstrap_ols(df, dvs, iv, covariates, n_iter, output_file):
-#     bootstrap_results = []
-#     n_rows = len(df)
-#     for dv in tqdm(dvs, desc="Bootstrapping DVs"):
-#         for i in range(n_iter):
-#             sample_indices = np.random.choice(n_rows, size=n_rows, replace=True)
-#             sample = df.iloc[sample_indices]
-#             X = sample[[iv] + covariates]
-#             y = sample[dv]
-#             X = sm.add_constant(X)
-#             model = sm.OLS(y, X).fit()
-
-#             coefficient = model.params[iv]
-#             ci_lower = model.conf_int().loc[iv, 0]
-#             ci_upper = model.conf_int().loc[iv, 1]
-#             p_value = model.pvalues[iv]
-#             r_squared = model.rsquared
-            
-#             result = {
-#                 "DV": dv,
-#                 "Coefficient_boot": coefficient,
-#                 "CI_Lower_boot": ci_lower,
-#                 "CI_Upper_boot": ci_upper,
-#                 "P-Value_boot": p_value,
-#                 "R-Squared_boot": r_squared
-#             }
-#             bootstrap_results.append(result)
-
-#             #periodically save results every 100 iterations or at the end
-#             if (i + 1) % 100 == 0 or (dv == dvs[-1] and i == n_iter - 1):  
-                
-#                 pd.DataFrame(bootstrap_results).to_csv(output_file, 
-#                                                        index=False, 
-#                                                        mode='a', 
-#                                                        header=not Path(output_file).exists())
-#                 bootstrap_results = [] #clear to save memory
-
-
-
 for crit in CRITERIA:
     IV = crit
     df_replies = df_replies.dropna(subset=[IV])
@@ -210,9 +169,3 @@ for crit in CRITERIA:
                             )
                         )
     
-    
-    # print("Bootstrapping for first replies...")
-    # bootstrap_ols(df_first, 
-    #             DVS_FIRST, IV, COVARIATES_FIRST, 
-    #             N_ITER,
-    #                 "./replies/replies_first_coeffs_boot.csv")

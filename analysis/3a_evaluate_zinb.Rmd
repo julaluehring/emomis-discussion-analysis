@@ -16,8 +16,8 @@ set.seed(636)
 options(scipen = 999)
 ```
 ```{r}
-setwd("/home/luehring/german-newsguard-emotions/analysis/engagement")
-dst <- "./engagement/"
+figures <- "../figures/"
+tables <- "../tables/"
 ```
 
 
@@ -213,7 +213,7 @@ zinb_table %>%
         digits = 3,
         linesep = "",
         align = c("l", rep("r", 8))) %>%
-  save_kable(file.path(dst, "zinb_table.tex"))
+  save_kable(file.path(tables, "zinb_table.tex"))
 
 zinb_table
 ```
@@ -260,7 +260,7 @@ nb_table %>%
         digits = 3,
         linesep = "",
         align = c("l", rep("r", 6))) %>%
-  save_kable(file.path(dst, "nb_table.tex"))
+  save_kable(file.path(tables, "nb_table.tex"))
 
 nb_table
 ```
@@ -312,7 +312,7 @@ model_fit %>%
         digits = 3,
         linesep = "",
         align = c("l", "l", rep("r", 7))) %>%
-  save_kable(file.path(dst, "all_models_fit.tex"))
+  save_kable(file.path(tables, "all_models_fit.tex"))
 
 model_fit
 ```
@@ -388,7 +388,7 @@ for (name in names(dharma_nb)) {
 
 dvs <- c("like_count", "retweet_count", "reply_count", "quote_count")
 plot_titles <- c("Likes", "Retweets", "Replies", "Quotes")
-pdf(paste0(dst, "nb_dharma_plots.pdf"), 
+pdf(paste0(figures, "nb_dharma_plots.pdf"), 
             width = 6.5, height = 6.5)
 par(mfrow = c(2, 2))
 for (i in seq_along(dvs)) {
@@ -426,7 +426,7 @@ for (name in names(dharma_zinb)) {
   dharma_zinb_objects[[name]] <- sim_res
 }
 
-pdf(paste0(dst, "zinb_dharma_plots.pdf"), 
+pdf(paste0(figures, "zinb_dharma_plots.pdf"), 
             width = 6.5, height = 6.5)
 
 par(mfrow = c(2, 2))
@@ -449,7 +449,6 @@ dev.off()
 
 ### Marginal effects
 
-
 ```{r}
 like_means <- read.csv("./engagement/like_count_mfx.csv")
 quote_means <- read.csv("./engagement/quote_count_mfx.csv")
@@ -460,7 +459,7 @@ retweet_means <- read.csv("./engagement/retweet_count_mfx.csv")
 means_df <- rbind(like_means, quote_means,
                   reply_means, retweet_means)
 
-write.csv(means_df, "avg_predictions_mfx.csv", row.names = FALSE)
+write.csv(means_df, "./engagement/avg_predictions_mfx.csv", row.names = FALSE)
 means_df
 ```
 
@@ -525,6 +524,6 @@ mfx_df %>%
         digits = 3,
         linesep = "",
         align = c("l", rep("r", 7))) %>%
-  save_kable(file.path(dst, "mfx_table.tex"))
+  save_kable(file.path(tables, "mfx_table.tex"))
 ```
 
