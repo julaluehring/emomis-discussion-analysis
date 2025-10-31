@@ -2,13 +2,13 @@
 
 Public repository for the data collection and analysis code for [LINK TO PAPER]. 
 
-Here you find the scripts to reproduce the statistical analysis. Due to the size of the dataset, the data subsets are [this](https://osf.io/ach37/?view_only=6cb92560a84f41a8954d5db2863e83e0) repository (currently anonymous view-only link). After downloading this repository, place the data folder contained in the aforementioned OSF repository and copy it into the main directory of this repository (i.e. on the same level as the code folders).
+Here you find the scripts to reproduce the statistical analysis. After downloading this repository, place the data folder into the main directory of this repository (i.e. on the same level as the ``analysis`` folder).
 
 ## Reproduction of analysis
 The repository is organized into two sections: ``data_processing`` and ``analysis``. 
 
 * ``data_processing`` contains exemplary scripts for the data collection, wrangling, text processing and non-parametric matching. The resulting datasets are used for the statistical analysis. _Note._ Most of these steps cannot be reproduced (see Restrictions).
-* In ``analysis``, you will find the scripts to reproduce the results of the statistical analysis. The datasets used for each analysis can be found [here](https://osf.io/ach37/?view_only=6cb92560a84f41a8954d5db2863e83e0).
+* In ``analysis``, you will find the scripts to reproduce all the results of the statistical analysis (i.e., all scripts in ``analysis``).
 
 ### Restrictions
 There are two major restrictions to publishing all data and scripts required to fully reproduce the study: 
@@ -32,37 +32,42 @@ First, we cleaned the text with ``1_prepare_text.py`` so that we can apply the E
 For the validation data (merged in ``5_merge_validation_data.py``), we calculated the percentage agreement in ``6_shuffle_percentage_agreement.py`` and plotted the area under the curve in ``7_plot_ruc.ipynb``. 
 
 ## Non-parametric matching
-We subsetted only the discussions, i.e., the tweets that have received replies from our dataset (``0a_subset_discussions.ipynb``) and anonymized the data (``0b_anonymize_data.ipynb``). 
+We subsetted only the discussions, i.e., the tweets that have received replies from our dataset (``1_subset_discussions.ipynb``). 
+Then, we aggregated the datasets in ``2a_aggregate_replies.ipynb`` and ``2b_aggregate_starters.ipynb``.
 
-**If you want to reproduce the matching & analysis, you can start here with aggregating the anonymized data subsets for the a) replies and first replies in the discussions (``1_aggregate_replies.ipynb``) and b) the news tweets (``2_aggregate_starters.ipynb``). ** Now, we have the separate input datasets and scripts for the matching: 
+**If you want to reproduce the matching & analysis, you can start here with the aggregated datasets for the a) replies and first replies in the discussions.** 
 
-* ``3_match_replies.R``:
+Now, we have the separate input datasets and scripts for the matching: 
+
+* ``3a_match_replies.R``:
       * input: "discussions_replies_aggregates.csv"
       * ouput: "matched_replies_mahalanobis.csv" & "matched_replies_glm.csv"
-* ``4_match_replies_first.R``:
+* ``3b_match_replies_first.R``:
       * input: "first_replies_aggregates.csv"
       * output: "matched_replies_first_mahalanobis.csv" & "matched_replies_first_glm.csv"
 
-* ``5_match_starters.R``:
+* ``3c_match_starters.R``:
       * input: "discussions_starters_aggregates.csv"
       * output: "matched_starters_mahalanobis.csv" & "matched_starters_glm.csv"
 
-To evaluate the matching and plot: ``6_eval_matching.ipynb``.
+To evaluate the matching and plot: ``4_eval_matching.ipynb``.
 
 ## Statistical analysis
 The statistical analyses can be reproduced using the following scripts: 
-To test the effects on engagement and try the different Generalized Linear Models (``1a_fit_poisson.R``, ``1b_fit_nb.R`` and ``1c_fit_zinb.R``) and evaluate the models in ``2_evaluate_zinb_models.Rmd``, and bootstrap the conditional means (``3_boot_means.R``). To run the regression models for the effects on emotions (``4a_boot_discussions.py``), evaluate the results (``4b_test_discussions.ipynb``), test (``4c_test_components.py``) and visualize components (``4d_visualize_components.ipynb``), and test different NewsGuard thresholds (``4e_test_newsguard_thresholds.ipynb``). To test within-user differences (``5a_fit_lmem.R``) and describe user groups in our sample (``5b_describe_users.ipynb``)
+To test the effects on engagement and try the different Generalized Linear Models (``1a_fit_poisson.R``, ``1b_fit_nb.R`` and ``1c_fit_zinb.R``) and evaluate the models in ``2a_evaluate_zinb.Rmd`` and ``2b_plot_cdf.ipynb``, as well as bootstrap the marginal effects (``3_boot_marginal_effects.R``). 
+
+To run the regression models for the effects on emotions (``4a_boot_discussions.py``), evaluate the results (``4b_test_discussions.ipynb``), test (``4c_test_components.py``) and visualize components (``4d_visualize_components.ipynb``), and test different NewsGuard thresholds (``4e_test_newsguard_thresholds.ipynb``). To test within-user differences (``5a_fit_lmem.R``, ``5b_evaluate_lmem.Rmd``) and describe user groups in our sample (``6_describe_users.ipynb``)
 
 
 ## Scripts to reproduce figures from the article: 
 
-* Fig. 1 (Panel b&c), Fig. 2 and Fig. 3: ``0_plot_main_figures.ipynb``
+* Fig. 1 (Panel b&c), Fig. 2 and Fig. 3: ``plot_main_figures.ipynb``
 * Fig. S1: ``test_newsguard_thresholds.ipynb``
 * Fig. S2: ``shuffle_percentage_agreement.py``
 * Fig. S3: ``plot_ruc.ipynb``
 * Fig. S4: ``eval_matching.ipynb``
 * Fig. S5: ``plot_cdf.ipynb``
-* Fig. S6 & S7: ``evaluate_zinb_models.Rmd``
+* Fig. S6 & S7: ``evaluate_zinb.Rmd``
 * Fig. S8 & S9: ``test_discussions.ipynb``
 * Fig. S10-S13: ``describe_users.ipynb``
 * Fig. S14: ``visualize_components.ipynb``
