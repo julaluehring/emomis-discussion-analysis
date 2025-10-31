@@ -1,8 +1,6 @@
-# Effects of misinformation on online interactions
+# Quantifying the Causal Effects of Misinformation on Engagenemt and Emotions on Social Media
 
-Public repository for the data collection and analysis code for [LINK TO PAPER]. 
-
-Here you find the scripts to reproduce the statistical analysis. After downloading this repository, place the data folder into the main directory of this repository (i.e. on the same level as the ``analysis`` folder).
+Public repository for the data collection and analysis code reproduce the statistical analysis. After downloading this repository, place the data folder into the main directory of this repository (i.e. on the same level as the ``analysis`` folder).
 
 ## Reproduction of analysis
 The repository is organized into two sections: ``data_processing`` and ``analysis``. 
