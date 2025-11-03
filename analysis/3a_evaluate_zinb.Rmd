@@ -11,6 +11,7 @@ library(DHARMa)
 library(cowplot)
 library(car)
 library(marginaleffects)
+library(stats)
 
 set.seed(636)
 options(scipen = 999)
@@ -159,9 +160,10 @@ create_zinb_table <- function(model, path, dv) {
     filter(term == "Rating", component == "zero") %>%
     mutate(
       `95%CI` = paste0(round(conf_low, 3), ", ", round(conf_high, 3)),
-      OR = round(exp(estimate), 3)
+      OR = round(exp(estimate), 3),
+      `Adj. p` = p.adjust(p_value, method = "BH")
     ) %>%
-    dplyr:::select(estimate, std_error, p_value, `95%CI`, OR) %>%
+    dplyr:::select(estimate, std_error, p_value, `Adj. p`, `95%CI`, OR) %>%
     rename(
       Estimate = estimate,
       `SE` = std_error,
@@ -176,7 +178,7 @@ create_zinb_table <- function(model, path, dv) {
       IRR = round(exp(estimate), 3),
       PC = round((exp(estimate) - 1) * 100, 3)
     ) %>%
-    dplyr:::select(estimate, std_error, p_value, `95%CI`, IRR, PC) %>%
+    dplyr:::select(estimate, std_error, p_value, `Adj. p`,`95%CI`, IRR, PC) %>%
     rename(
       Estimate = estimate,
       `SE` = std_error, 
@@ -190,7 +192,8 @@ create_zinb_table <- function(model, path, dv) {
                     str_to_title()
 
   combined_row <-combined_row%>%
-    dplyr::select(DV, Component, everything())
+    dplyr::select(DV, Component, everything())%>%
+    mutate(across(where(is.numeric), ~sprintf("%.3f", .)))
 
   
   return(combined_row)
@@ -210,7 +213,6 @@ zinb_table <- bind_rows(
 zinb_table %>%
   kable("latex", 
         booktabs = TRUE,
-        digits = 3,
         linesep = "",
         align = c("l", rep("r", 8))) %>%
   save_kable(file.path(tables, "zinb_table.tex"))
@@ -227,9 +229,11 @@ create_nb_table <- function(dv) {
   rating_row <- model_summary %>%
     filter(term == "Rating") %>%
     mutate(
-      `95%CI` = paste0(round(conf.low, 3), ", ", round(conf.high, 3))
+      `95%CI` = paste0(round(conf.low, 3), ", ", round(conf.high, 3)),
+      `Adj. p` = p.adjust(p.value, method = "BH")
     ) %>%
-    dplyr:::select(estimate, std.error, p.value, `95%CI`, IRR, PC) %>%
+    dplyr:::select(estimate, std.error, p.value, `Adj. p`,
+    `95%CI`, IRR, PC) %>%
     rename(
       Estimate = estimate,
       `SE` = std.error,
@@ -459,6 +463,14 @@ retweet_means <- read.csv("./engagement/retweet_count_mfx.csv")
 means_df <- rbind(like_means, quote_means,
                   reply_means, retweet_means)
 
+# recode into DV names
+means_df$DV <- c(
+  "like_count" = "Likes",
+  "quote_count" = "Quotes",
+  "reply_count" = "Replies",
+  "retweet_count" = "Retweets"
+)[means_df$DV]
+
 write.csv(means_df, "./engagement/avg_predictions_mfx.csv", row.names = FALSE)
 means_df
 ```
@@ -502,10 +514,13 @@ mfx_df <- means_df %>%
   dplyr:::select(DV, Predicted)%>%
   merge(fx_df, by="DV")%>%
   mutate(
-      `95%CI` = paste0(round(CI_Lower, 3), ", ", round(CI_Upper, 3))) %>%
+      `95%CI` = paste0(round(CI_Lower, 3), ", ", round(CI_Upper, 3)),
+      `Adj. p` = p.adjust(p, method = "BH")
+      ) %>%
   dplyr::select(-CI_Lower, -CI_Upper) %>%
   mutate(PC = ((Estimate / Predicted) * 100))%>%
-  dplyr::select(DV, Estimate, SE, z, p, `95%CI`, PC)
+  dplyr::select(DV, Estimate, SE, z, p, `Adj. p`, 
+  `95%CI`, PC)
 
 mfx_df
 ```
@@ -513,15 +528,10 @@ mfx_df
 ```{r}
 # write a latex table with kable
 mfx_df %>%
-  #recode the DV variable
-  mutate(DV = recode(DV, 
-                     "Likes" = "Like",
-                     "Quotes" = "Quote",
-                     "Replies" = "Reply",
-                     "Retweets" = "Retweet")) %>%
+    dplyr::select(DV, everything())%>%
+    mutate(across(where(is.numeric), ~sprintf("%.3f", .)))%>%
   kable("latex", 
         booktabs = TRUE,
-        digits = 3,
         linesep = "",
         align = c("l", rep("r", 7))) %>%
   save_kable(file.path(tables, "mfx_table.tex"))

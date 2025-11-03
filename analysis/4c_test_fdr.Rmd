@@ -1,0 +1,111 @@
+```{r}
+rm(list = ls())
+library(dplyr)
+library(stats)
+library(stringr)
+library(knitr)
+library(kableExtra)
+
+options(scipen = 999)
+```
+
+```{r}
+dst <- "../tables/"
+```
+
+```{r}
+process_coeffs <- function(path) {
+  coeffs <- read.csv(path)
+  coeffs$DV <- str_replace_all(coeffs$DV, "_avg", "") %>%
+                str_replace_all("_first", "")
+  coeffs$Change <- (coeffs$Coefficient / coeffs$Cond_Mean) * 100
+  
+  coeffs <- coeffs %>%
+    rename(p = P.Value,
+           `R²` = R.Squared,
+           Estimate = Coefficient) %>%
+    dplyr:::select(-Cond_Mean)%>%
+    mutate(`Adj. p` = p.adjust(p, method = "BH"))
+  return(coeffs)
+}
+
+replies_coeffs <- process_coeffs(file.path("./replies/", "replies_coeffs.csv"))
+first_coeffs <- process_coeffs(file.path("./replies/", "replies_first_coeffs.csv"))
+replies_coeffs
+```
+
+```{r}
+process_boot <- function(path) {
+  boot <- read.csv(path)
+  boot$DV <- str_replace_all(boot$DV, "_avg", "") %>%
+              str_replace_all("_first", "")
+  
+  quantiles <- boot %>%
+    group_by(DV) %>%
+    summarise(
+      CI_Lower_boot = quantile(Coefficient_boot, 0.025),
+      CI_Upper_boot = quantile(Coefficient_boot, 0.975)
+    )
+  
+  return(list(boot = boot, quantiles = quantiles))
+}
+
+replies_boot_result <- process_boot(file.path("./replies/", "replies_coeffs_boot.csv"))
+replies_coeffs_boot <- replies_boot_result$boot
+replies_cis <- replies_boot_result$quantiles
+
+first_boot_result <- process_boot(file.path("./replies/", "replies_first_coeffs_boot.csv"))
+first_coeffs_boot <- first_boot_result$boot
+first_cis <- first_boot_result$quantiles
+```
+
+```{r}
+replies_coeffs <- merge(replies_coeffs, replies_cis, by = "DV")
+first_coeffs <- merge(first_coeffs, first_cis, by = "DV")
+```
+
+```{r}
+replies_coeffs%>%
+    mutate(
+        `95%CI` = paste0(round(CI_Lower_boot, 3), ", ", round(CI_Upper_boot, 3)),
+    )%>%
+  dplyr::select(-CI_Lower_boot, -CI_Upper_boot) %>%
+  dplyr::select(DV, Estimate, `95%CI`, p, `Adj. p`, `R²`, Change)%>%
+kable("latex", 
+        booktabs = TRUE,
+        digits = 3,
+        linesep = "",
+        align = c("l", rep("r", 6))) %>%
+  save_kable(file.path(dst, "replies_coeffs.tex"))
+```
+
+```{r}
+replies_coeffs%>%
+    mutate(
+        `95%CI` = paste0(round(CI_Lower_boot, 3), ", ", round(CI_Upper_boot, 3)),
+    )%>%
+  dplyr::select(-CI_Lower_boot, -CI_Upper_boot) %>%
+  dplyr::select(DV, Estimate, `95%CI`, p, `Adj. p`, `R²`, Change)%>%
+kable("latex", 
+        booktabs = TRUE,
+        digits = 3,
+        linesep = "",
+        align = c("l", rep("r", 6))) %>%
+  save_kable(file.path(dst, "replies_coeffs.tex"))
+```
+
+```{r}
+first_coeffs%>%
+    mutate(
+        `95%CI` = paste0(round(CI_Lower_boot, 3), ", ", round(CI_Upper_boot, 3)),
+    )%>%
+  dplyr::select(-CI_Lower_boot, -CI_Upper_boot) %>%
+  dplyr::select(DV, Estimate, `95%CI`, p, `Adj. p`, `R²`, Change)%>%
+kable("latex", 
+        booktabs = TRUE,
+        digits = 3,
+        linesep = "",
+        align = c("l", rep("r", 6))) %>%
+  save_kable(file.path(dst, "first_coeffs.tex"))
+```
+

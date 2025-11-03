@@ -135,10 +135,13 @@ for (dv in dvs) {
   model <- readRDS(paste0("./users/", dv, "_lmem.rds"))
   coeffs <- extract_all_coeffs(model, dv)
   coeffs <- coeffs %>%
-    dplyr::mutate(`95%CI` = paste0(round(pLL, 3), ", ", round(pUL, 3)))
+    dplyr::mutate(
+      `95%CI` = paste0(round(pLL, 3), ", ", round(pUL, 3)),
+      `Adj. p` = p.adjust(p, method = "BH")
+      )
 
   # drop pUL and PLL and DV
-  coeffs <- coeffs[, c("IV", "Estimate", "SE", "t", "p", "95%CI")]
+  coeffs <- coeffs[, c("IV", "Estimate", "SE", "t", "p", "Adj. p", "95%CI")]
 
   # remove _log from IV names
   coeffs$IV <- gsub("author.", "", coeffs$IV)
@@ -154,7 +157,7 @@ for (dv in dvs) {
           digits = 3,
           row.names = FALSE,
           linesep = "",
-          align = c("l", rep("r", 7))) %>%
+          align = c("l", rep("r", 8))) %>%
     save_kable(paste0(tables, dv, "_lmem.tex"))
 
 
