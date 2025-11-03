@@ -57,7 +57,8 @@ To evaluate the matching and plot: ``4_eval_matching.ipynb``.
 The statistical analyses can be reproduced using the following scripts: 
 To test the effects on engagement and try the different Generalized Linear Models (``1a_fit_poisson.R``, ``1b_fit_nb.R`` and ``1c_fit_zinb.R``), bootstrap the marginal effects (``2_boot_marginal_effects.R``), and evaluate the models in ``3a_evaluate_zinb.Rmd`` and ``3b_plot_cdf.ipynb``.
 
-To run the regression models for the effects on emotions (``4a_boot_discussions.py``), evaluate the results (``4b_test_discussions.ipynb``), test (``4c_test_components.py``) and visualize components (``4d_visualize_components.ipynb``), and test different NewsGuard thresholds (``4e_test_newsguard_thresholds.ipynb``). To test within-user differences (``5a_fit_lmem.R``, ``5b_evaluate_lmem.Rmd``) and describe user groups in our sample (``6_describe_users.ipynb``)
+To run the regression models for the effects on emotions (``4a_boot_discussions.py``), evaluate the results (``4b_test_discussions.ipynb``), test the false discovery rate (``4c_test_fdr.Rmd``). To test within-user differences (``5a_fit_lmem.R``, ``5b_evaluate_lmem.Rmd``) and describe user groups in our sample (``6_describe_users.ipynb``)
+For several robustness checks, see ``7_test_components.py``), ``7_visualize_components.ipynb``, and ``7_test_newsguard_thresholds.ipynb``. 
 
 
 ## Scripts to reproduce figures from the article: 
