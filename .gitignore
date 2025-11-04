@@ -1,7 +1,8 @@
 # Untracked folders and files
 data/
 data.zip
-anonymize_data.ipynb
+anonymize_authors.ipynb
+
 analysis/criteria/
 analysis/engagement/
 analysis/replies/
