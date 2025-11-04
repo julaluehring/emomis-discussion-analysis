@@ -136,12 +136,11 @@ for (dv in dvs) {
   coeffs <- extract_all_coeffs(model, dv)
   coeffs <- coeffs %>%
     dplyr::mutate(
-      `95%CI` = paste0(round(pLL, 3), ", ", round(pUL, 3)),
-      `Adj. p` = p.adjust(p, method = "BH")
-      )
+      `95%CI` = paste0(round(pLL, 3), ", ", round(pUL, 3))
+    )
 
   # drop pUL and PLL and DV
-  coeffs <- coeffs[, c("IV", "Estimate", "SE", "t", "p", "Adj. p", "95%CI")]
+  coeffs <- coeffs[, c("IV", "Estimate", "SE", "t", "p", "95%CI")]
 
   # remove _log from IV names
   coeffs$IV <- gsub("author.", "", coeffs$IV)
